@@ -1,0 +1,134 @@
+{
+  "name": "elysia-companion",
+  "displayName": "Elysia Companion",
+  "description": "Elysia Companion - Usage tracking, model management, and service control for VS Code",
+  "version": "0.1.0",
+  "publisher": "fernando.viotto@informa.com",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization",
+    "Debuggers"
+  ],
+  "keywords": [
+    "elysia",
+    "usage",
+    "tracking",
+    "cost",
+    "monitor",
+    "informa"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "elysiaUsage.refresh",
+        "title": "Refresh Usage Data",
+        "category": "Elysia Usage",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "elysiaUsage.showDetails",
+        "title": "Show Detailed Usage",
+        "category": "Elysia Usage",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "elysiaUsage.openSettings",
+        "title": "Open Settings",
+        "category": "Elysia Usage",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "elysiaUsage.restartCompression",
+        "title": "Restart Compression",
+        "category": "Elysia Usage",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "elysiaUsage.getModels",
+        "title": "Get Models",
+        "category": "Elysia Usage",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "elysiaUsage.changeModel",
+        "title": "Change Model",
+        "category": "Elysia Usage",
+        "icon": "$(symbol-misc)"
+      }
+    ],
+    "configuration": {
+      "title": "Elysia Usage Tracker",
+      "properties": {
+        "elysiaUsage.enableTracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable usage tracking"
+        },
+        "elysiaUsage.refreshInterval": {
+          "type": "number",
+          "default": 300000,
+          "minimum": 60000,
+          "maximum": 3600000,
+          "description": "Refresh interval in milliseconds (default: 5 minutes)"
+        },
+        "elysiaUsage.warningThreshold": {
+          "type": "number",
+          "default": 45,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage threshold for yellow lighthouse (default: 45%)"
+        },
+        "elysiaUsage.criticalThreshold": {
+          "type": "number",
+          "default": 85,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage threshold for red lighthouse (default: 85%)"
+        },
+        "elysiaUsage.showDollarAmount": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show dollar amount in status bar"
+        },
+        "elysiaUsage.showPercentage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show percentage in status bar"
+        },
+        "elysiaUsage.elysiaCodePath": {
+          "type": "string",
+          "default": "elysia-code",
+          "description": "Path to elysia-code executable (use 'elysia-code' for PATH)"
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/informa/elysia-companion"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}
