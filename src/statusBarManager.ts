@@ -3,10 +3,13 @@ import { ElysiaService, ElysiaConfig } from './elysiaService';
 
 export class StatusBarManager {
   private statusBarItem: vscode.StatusBarItem;
+  private compressionStatusItem: vscode.StatusBarItem;
+  private privateStatusItem: vscode.StatusBarItem;
   private elysiaService: ElysiaService;
   private outputChannel: vscode.OutputChannel;
   private refreshInterval: NodeJS.Timeout | null = null;
   private isLoading: boolean = false;
+  private currentConfig: ElysiaConfig | null = null;
 
   constructor(
     elysiaService: ElysiaService,
@@ -15,14 +18,27 @@ export class StatusBarManager {
     this.elysiaService = elysiaService;
     this.outputChannel = outputChannel;
 
-    // Create status bar item (right-aligned, high priority)
+    // Create main status bar item (right-aligned, high priority)
     this.statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
       100
     );
 
-    // Set up click handler
+    // Create compression status bar item (right-aligned, lower priority)
+    this.compressionStatusItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      99
+    );
+
+    // Create private status bar item (right-aligned, lowest priority)
+    this.privateStatusItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      98
+    );
+
+    // Set up click handlers
     this.statusBarItem.command = 'elysiaUsage.showDetails';
+    this.privateStatusItem.command = 'elysiaUsage.togglePrivateMode';
 
     // Initialize with loading state
     this.setLoadingState();
@@ -36,15 +52,54 @@ export class StatusBarManager {
 
   show(): void {
     this.statusBarItem.show();
+    this.compressionStatusItem.show();
+    this.privateStatusItem.show();
   }
 
   hide(): void {
     this.statusBarItem.hide();
+    this.compressionStatusItem.hide();
+    this.privateStatusItem.hide();
   }
 
   dispose(): void {
     this.stopAutoRefresh();
     this.statusBarItem.dispose();
+    this.compressionStatusItem.dispose();
+    this.privateStatusItem.dispose();
+  }
+
+  async updateCompressionDisplay(): Promise<void> {
+    try {
+      const compressionStatus = await this.elysiaService.getCompressionStatus();
+      const enabled = compressionStatus.enabled;
+
+      // Use emoji based on status
+      const statusEmoji = enabled ? '🟢' : '🔴';
+
+      this.compressionStatusItem.text = `${statusEmoji} Compression`;
+      this.compressionStatusItem.tooltip = `Compression is ${enabled ? 'enabled' : 'disabled'}\n\nClick for details`;
+      this.compressionStatusItem.backgroundColor = enabled
+        ? undefined
+        : new vscode.ThemeColor('statusBarItem.errorBackground');
+    } catch (error) {
+      this.compressionStatusItem.text = '⚪ Compression';
+      this.compressionStatusItem.tooltip = 'Compression status unknown';
+    }
+  }
+
+  updatePrivateDisplay(config: ElysiaConfig): void {
+    const isPrivate = config.isPrivate;
+
+    // Use lock/unlock icons based on status
+    const icon = isPrivate ? '$(lock)' : '$(unlock)';
+    const text = isPrivate ? 'Private' : 'Standard';
+
+    this.privateStatusItem.text = `${icon} ${text}`;
+    this.privateStatusItem.tooltip = `Privacy mode is ${isPrivate ? 'enabled (Private)' : 'disabled (Standard)'}\n\nClick to toggle`;
+    this.privateStatusItem.backgroundColor = isPrivate
+      ? new vscode.ThemeColor('statusBarItem.warningBackground')
+      : undefined;
   }
 
   setLoadingState(): void {
@@ -103,7 +158,7 @@ export class StatusBarManager {
     const tooltip = new vscode.MarkdownString();
     tooltip.appendMarkdown(`## Elysia Usage\n\n`);
     tooltip.appendMarkdown(`**Used:** $${config.usedAmount.toFixed(2)} of $${config.totalAmount.toFixed(2)}\n\n`);
-    tooltip.appendMarkdown(`**Progress:** ${config.percentage.toFixed(1)}%\n\n`);
+    tooltip.appendMarkdown(`**Consumed:** ${config.percentage.toFixed(1)}%\n\n`);
     tooltip.appendMarkdown(`---\n\n`);
     tooltip.appendMarkdown(`**Version:** ${config.version}\n\n`);
     tooltip.appendMarkdown(`**Model:** ${config.model}\n\n`);
@@ -138,6 +193,10 @@ export class StatusBarManager {
         this.outputChannel.appendLine(
           `[${new Date().toISOString()}] Updated: $${config.usedAmount.toFixed(2)} / $${config.totalAmount.toFixed(2)} (${config.percentage.toFixed(1)}%)`
         );
+
+        // Also update compression and private status
+        await this.updateCompressionDisplay();
+        this.updatePrivateDisplay(config);
       } else {
         this.outputChannel.appendLine('[StatusBar] Config is null - setting error state');
         this.setErrorState('Failed to fetch usage data');

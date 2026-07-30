@@ -453,4 +453,80 @@ export class ElysiaService {
       return false;
     }
   }
+
+  // Get compression status
+  async getCompressionStatus(): Promise<{ enabled: boolean; output: string }> {
+    try {
+      const config = vscode.workspace.getConfiguration('elysiaUsage');
+      const elysiaCodePath = config.get<string>('elysiaCodePath', 'elysia-code');
+      const commandPath = await this.resolveElysiaCommand(elysiaCodePath);
+
+      const isWindows = process.platform === 'win32';
+      const isCmdFile = commandPath.toLowerCase().endsWith('.cmd');
+      const execCommand = isWindows && isCmdFile
+        ? `cmd.exe /c "${commandPath}"`
+        : commandPath;
+
+      this.outputChannel.appendLine(`[ElysiaService] Fetching compression status...`);
+      const output = await this.executeCommand(`${execCommand} --compression-stats`);
+      this.outputChannel.appendLine(`[ElysiaService] Compression status: ${output.substring(0, 500)}`);
+
+      // Parse output - look for "Status : enabled" or "Status : disabled"
+      const normalized = output.toLowerCase();
+      const enabled = normalized.includes('enabled') ||
+                     (normalized.includes('status') &&
+                      normalized.includes('enabled') ||
+                      normalized.includes(' Status  : enabled'));
+
+      this.outputChannel.appendLine(`[ElysiaService] Compression enabled: ${enabled}`);
+      return { enabled, output };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.outputChannel.appendLine(`[ElysiaService] Error fetching compression status: ${errorMessage}`);
+      return { enabled: false, output: '' };
+    }
+  }
+
+  // Toggle private mode
+  async togglePrivateMode(enable: boolean): Promise<boolean> {
+    try {
+      const config = vscode.workspace.getConfiguration('elysiaUsage');
+      const elysiaCodePath = config.get<string>('elysiaCodePath', 'elysia-code');
+      const commandPath = await this.resolveElysiaCommand(elysiaCodePath);
+
+      // Build the command
+      const isWindows = process.platform === 'win32';
+      const isCmdFile = commandPath.toLowerCase().endsWith('.cmd');
+      const execPath = isWindows && isCmdFile
+        ? `"${commandPath}"`
+        : commandPath;
+
+      this.outputChannel.appendLine(`[ElysiaService] Toggling private mode to: ${enable}`);
+      const { stdout, stderr } = await execAsync(`${execPath} --private ${enable}`, {
+        timeout: 30000,
+        windowsHide: true,
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+      });
+
+      const output = stdout || stderr || '';
+      this.outputChannel.appendLine(`[ElysiaService] Private mode output (${output.length} chars): ${output.substring(0, 500)}`);
+
+      // Check success - look for "OK" and either "enabled" or "disabled"
+      const normalized = output.toLowerCase();
+      const success = normalized.includes('ok') &&
+        (normalized.includes('enabled') || normalized.includes('disabled'));
+
+      if (success) {
+        this.outputChannel.appendLine(`[ElysiaService] Private mode ${enable ? 'enabled' : 'disabled'} successfully`);
+      } else {
+        this.outputChannel.appendLine(`[ElysiaService] Failed to toggle private mode`);
+      }
+
+      return success;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.outputChannel.appendLine(`[ElysiaService] Error toggling private mode: ${errorMessage}`);
+      return false;
+    }
+  }
 }

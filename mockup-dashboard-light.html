@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elysia Usage Dashboard - Light</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Colors - Light Mode */
+      --color-primary: #0d6efd;
+      --color-primary-hover: #002244;
+      --color-secondary: #6cb5ff;
+      --color-indigo: #002244;
+      --color-text: #002244;
+      --color-text-secondary: #666666;
+      --color-text-muted: #51626f;
+      --color-bg: #ffffff;
+      --color-bg-card: #fafafa;
+      --color-bg-input: #ffffff;
+      --color-border: #e0e8eb;
+      --color-border-focus: #0d6efd;
+
+      /* Semantic colors */
+      --color-success: #33D7C8;
+      --color-success-bg: rgba(51, 215, 200, 0.15);
+      --color-success-text: #00786e;
+      --color-warning: #EEAF00;
+      --color-warning-bg: rgba(238, 175, 0, 0.15);
+      --color-warning-text: #B05223;
+      --color-error: #FF547C;
+      --color-error-bg: rgba(255, 84, 124, 0.15);
+      --color-error-text: #BF1B4F;
+
+      /* Typography */
+      --font-heading: 'Aleo', serif;
+      --font-body: 'Open Sans', sans-serif;
+
+      /* Spacing (8px base) */
+      --space-xs: 2px;
+      --space-sm: 4px;
+      --space-md: 8px;
+      --space-lg: 16px;
+      --space-xl: 24px;
+      --space-2xl: 32px;
+
+      /* Border radius */
+      --radius-sm: 3px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+
+      /* Shadows */
+      --shadow-low: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-mid: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-high: 0 8px 16px rgba(0, 0, 0, 0.15);
+
+      /* Focus ring */
+      --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--color-text);
+      background: var(--color-bg);
+      min-height: 100vh;
+      padding: var(--space-xl);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .header-title {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-indigo);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Card */
+    .card {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-low);
+    }
+
+    .card:last-of-type {
+      margin-bottom: var(--space-xl);
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-indigo);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Model Selector */
+    .model-section {
+      position: relative;
+      margin-bottom: var(--space-xl);
+    }
+
+    .model-current {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .model-current:hover {
+      border-color: var(--color-primary);
+    }
+
+    .model-current-label {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .model-current-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .model-current-arrow {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      transition: transform 0.2s ease;
+    }
+
+    .model-current.open .model-current-arrow {
+      transform: rotate(180deg);
+    }
+
+    .model-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: var(--space-md);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+    }
+
+    .model-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .model-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      cursor: pointer;
+      border-bottom: 1px solid var(--color-border);
+      transition: background-color 0.15s ease;
+    }
+
+    .model-item:last-child {
+      border-bottom: none;
+    }
+
+    .model-item:hover {
+      background: var(--color-bg-card);
+    }
+
+    .model-item.selected {
+      background: rgba(13, 110, 253, 0.1);
+    }
+
+    .model-item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .model-item-badge {
+      font-size: 10px;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-sm);
+      background: var(--color-success);
+      color: var(--color-success-text);
+      font-weight: 600;
+    }
+
+    /* Action Buttons */
+    .button-container {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 1;
+      min-width: 120px;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+      box-shadow: var(--shadow-mid);
+    }
+
+    .btn-success {
+      background: var(--color-success);
+      color: var(--color-success-text);
+    }
+
+    .btn-success:hover {
+      background: #2bc4b5;
+    }
+
+    .btn-secondary {
+      background: var(--color-bg-input);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-bg-card);
+      border-color: var(--color-text-secondary);
+    }
+
+    .btn-danger {
+      background: var(--color-error);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: var(--color-error-text);
+    }
+
+    /* Usage Summary */
+    .usage-summary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+
+    .amount-display {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .amount-display.warning {
+      color: var(--color-warning);
+    }
+
+    .amount-display.critical {
+      color: var(--color-error);
+    }
+
+    .progress-container {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .progress-bar-bg {
+      background: var(--color-border);
+      border-radius: var(--radius-xl);
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-xl);
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-fill.healthy {
+      background: var(--color-success);
+    }
+
+    .progress-bar-fill.warning {
+      background: var(--color-warning);
+    }
+
+    .progress-bar-fill.critical {
+      background: var(--color-error);
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 12px;
+      margin-top: var(--space-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .progress-text.warning {
+      color: var(--color-warning-text);
+    }
+
+    .progress-text.critical {
+      color: var(--color-error-text);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 12px;
+      font-weight: 600;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-lg);
+    }
+
+    .status-badge.healthy {
+      background: var(--color-success-bg);
+      color: var(--color-success-text);
+    }
+
+    .status-badge.warning {
+      background: var(--color-warning-bg);
+      color: var(--color-warning-text);
+    }
+
+    .status-badge.critical {
+      background: var(--color-error-bg);
+      color: var(--color-error-text);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-dot.healthy {
+      background: var(--color-success);
+    }
+
+    .status-dot.warning {
+      background: var(--color-warning);
+    }
+
+    .status-dot.critical {
+      background: var(--color-error);
+    }
+
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    .info-item {
+      padding: var(--space-md);
+      background: var(--color-bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .info-label {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* Toggle Row */
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+    }
+
+    .metric-value {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-text);
+    }
+
+    .btn-toggle {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      min-width: auto;
+      flex: none;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      padding: var(--space-lg) 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body {
+        padding: var(--space-lg);
+      }
+
+      .card {
+        padding: var(--space-lg);
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .usage-summary {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .progress-container {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="header-title">
+        <span>📊</span>
+        Elysia Usage Dashboard
+      </h1>
+      <p class="header-subtitle">Monitor your Elysia API usage and configuration</p>
+    </header>
+
+    <!-- Model Selector -->
+    <section class="card model-section">
+      <div class="section-title">🤖 AI Model</div>
+      <div class="model-current" onclick="toggleDropdown()">
+        <div>
+          <div class="model-current-label">Current Model</div>
+          <div class="model-current-value">kimi-k2.5</div>
+        </div>
+        <div class="model-current-arrow">▼</div>
+      </div>
+
+      <div class="model-dropdown" id="modelDropdown">
+        <div class="model-item selected">
+          <span class="model-item-name">kimi-k2.5</span>
+          <span class="model-item-badge">active</span>
+        </div>
+        <div class="model-item">
+          <span class="model-item-name">zai.glm-5</span>
+        </div>
+        <div class="model-item">
+          <span class="model-item-name">claude-sonnet-5</span>
+        </div>
+        <div class="model-item">
+          <span class="model-item-name">claude-opus-5</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Action Buttons -->
+    <section class="card">
+      <div class="section-title">⚡ Actions</div>
+      <div class="button-container">
+        <button class="btn btn-secondary" onclick="refreshData()">
+          <span>🔄</span> Refresh
+        </button>
+        <button class="btn btn-success" onclick="restartService()">
+          <span>🚀</span> Restart
+        </button>
+        <button class="btn btn-secondary" onclick="openSettings()">
+          <span>⚙️</span> Settings
+        </button>
+      </div>
+    </section>
+
+    <!-- Usage Summary -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+        <div class="section-title" style="margin-bottom: 0;">📈 Usage Summary</div>
+        <span class="status-badge warning">
+          <span class="status-dot warning"></span>
+          Warning
+        </span>
+      </div>
+
+      <div class="usage-summary">
+        <div class="amount-display warning">$117.45</div>
+        <div class="progress-container">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill warning" style="width: 58.7%;"></div>
+          </div>
+          <div class="progress-text warning">58.7% of $200.00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Configuration -->
+    <section class="card">
+      <div class="section-title">⚙️ Configuration</div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Version</div>
+          <div class="info-value">0.3.0</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Workspace</div>
+          <div class="info-value">ws-inform-1a0500</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Config ID</div>
+          <div class="info-value">pc-defaul-0c6289</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Compression</div>
+          <div class="info-value" style="color: var(--color-success-text);">Enabled</div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-lg);">
+        <div class="metric-row">
+          <span class="metric-label">Private Mode</span>
+          <button class="btn btn-secondary btn-toggle" onclick="togglePrivate()">
+            🔓 Standard
+          </button>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">LangSmith</span>
+          <span class="metric-value" style="color: var(--color-success-text);">✓ Enabled</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Status</span>
+          <span class="metric-value">Active</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Last updated: Jul 30, 2026, 16:45:12<br>
+      Auto-refreshes every 5 minutes
+    </footer>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const dropdown = document.getElementById('modelDropdown');
+      dropdown.classList.toggle('open');
+    }
+
+    function refreshData() {
+      alert('Refreshing data...');
+    }
+
+    function restartService() {
+      alert('Restarting compression service...');
+    }
+
+    function openSettings() {
+      alert('Opening settings...');
+    }
+
+    function togglePrivate() {
+      const btn = document.activeElement;
+      if (btn.innerHTML.includes('Standard')) {
+        btn.innerHTML = '🔒 Private';
+        btn.style.background = 'var(--color-warning-bg)';
+        btn.style.color = 'var(--color-warning-text)';
+      } else {
+        btn.innerHTML = '🔓 Standard';
+        btn.style.background = '';
+        btn.style.color = '';
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const modelSection = document.querySelector('.model-section');
+      if (!modelSection.contains(e.target)) {
+        document.getElementById('modelDropdown').classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>

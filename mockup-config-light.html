@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elysia Configuration - Light</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Colors - Light Mode */
+      --color-primary: #0d6efd;
+      --color-primary-hover: #002244;
+      --color-secondary: #6cb5ff;
+      --color-indigo: #002244;
+      --color-text: #002244;
+      --color-text-secondary: #666666;
+      --color-text-muted: #51626f;
+      --color-bg: #ffffff;
+      --color-bg-card: #fafafa;
+      --color-bg-input: #ffffff;
+      --color-border: #e0e8eb;
+      --color-border-focus: #0d6efd;
+
+      /* Semantic colors */
+      --color-success: #33D7C8;
+      --color-success-bg: rgba(51, 215, 200, 0.15);
+      --color-success-text: #00786e;
+      --color-warning: #EEAF00;
+      --color-warning-bg: rgba(238, 175, 0, 0.15);
+      --color-warning-text: #B05223;
+      --color-error: #FF547C;
+      --color-error-bg: rgba(255, 84, 124, 0.15);
+      --color-error-text: #BF1B4F;
+
+      /* Typography */
+      --font-heading: 'Aleo', serif;
+      --font-body: 'Open Sans', sans-serif;
+
+      /* Spacing (8px base) */
+      --space-xs: 2px;
+      --space-sm: 4px;
+      --space-md: 8px;
+      --space-lg: 16px;
+      --space-xl: 24px;
+      --space-2xl: 32px;
+
+      /* Border radius */
+      --radius-sm: 3px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+
+      /* Shadows */
+      --shadow-low: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-mid: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-high: 0 8px 16px rgba(0, 0, 0, 0.15);
+
+      /* Focus ring */
+      --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--color-text);
+      background: var(--color-bg);
+      min-height: 100vh;
+      padding: var(--space-xl);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .header-title {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-indigo);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Card */
+    .card {
+      background: var(--color-bg-card);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-low);
+    }
+
+    .card:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-indigo);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: var(--space-lg);
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-sm);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: var(--space-xs);
+    }
+
+    /* Toggle Switch */
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background: var(--color-border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle.active {
+      background: var(--color-primary);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: var(--shadow-low);
+    }
+
+    .toggle.active .toggle-knob {
+      transform: translateX(24px);
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* Checkbox */
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      cursor: pointer;
+      padding: var(--space-sm) 0;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox.checked {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .checkbox-check {
+      color: white;
+      font-size: 12px;
+      display: none;
+    }
+
+    .checkbox.checked .checkbox-check {
+      display: block;
+    }
+
+    .checkbox-text {
+      font-size: 14px;
+      color: var(--color-text);
+    }
+
+    /* Input */
+    .input {
+      width: 100%;
+      max-width: 120px;
+      padding: var(--space-md) var(--space-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg-input);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--color-border-focus);
+      box-shadow: var(--focus-ring);
+    }
+
+    .input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .input-suffix {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .input-full {
+      max-width: 100%;
+    }
+
+    /* Buttons */
+    .button-group {
+      display: flex;
+      gap: var(--space-md);
+      padding-top: var(--space-xl);
+      margin-top: var(--space-xl);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-border);
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-lg);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.active {
+      background: var(--color-success-bg);
+      color: var(--color-success-text);
+    }
+
+    .status-badge.inactive {
+      background: var(--color-error-bg);
+      color: var(--color-error-text);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-dot.active {
+      background: var(--color-success);
+    }
+
+    .status-dot.inactive {
+      background: var(--color-error);
+    }
+
+    /* Section divider */
+    .section-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: var(--space-lg) 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body {
+        padding: var(--space-lg);
+      }
+
+      .card {
+        padding: var(--space-lg);
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="header-title">⚙️ Settings</h1>
+      <p class="header-subtitle">Customize your Elysia Usage Tracker</p>
+    </header>
+
+    <!-- Usage Tracking -->
+    <section class="card">
+      <div class="section-title">📊 Usage Tracking</div>
+
+      <div class="form-group">
+        <div class="toggle-wrapper">
+          <div class="toggle active" onclick="this.classList.toggle('active'); updateToggleStatus(this)">
+            <div class="toggle-knob"></div>
+          </div>
+          <span class="toggle-label">Enable Usage Tracking</span>
+          <span class="status-badge active" style="margin-left: auto;">
+            <span class="status-dot active"></span>
+            Active
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Display Settings -->
+    <section class="card">
+      <div class="section-title">👁️ Display Settings</div>
+
+      <div class="form-group">
+        <label class="checkbox-wrapper" onclick="this.querySelector('.checkbox').classList.toggle('checked')">
+          <div class="checkbox checked">
+            <span class="checkbox-check">✓</span>
+          </div>
+          <span class="checkbox-text">Show dollar amount</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-wrapper" onclick="this.querySelector('.checkbox').classList.toggle('checked')">
+          <div class="checkbox checked">
+            <span class="checkbox-check">✓</span>
+          </div>
+          <span class="checkbox-text">Show percentage</span>
+        </label>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="form-group">
+        <label class="form-label">Warning Threshold</label>
+        <div class="input-group">
+          <input type="number" class="input" value="45" min="0" max="100">
+          <span class="input-suffix">%</span>
+        </div>
+        <p class="form-hint">Yellow indicator when usage exceeds this percentage</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Critical Threshold</label>
+        <div class="input-group">
+          <input type="number" class="input" value="85" min="0" max="100">
+          <span class="input-suffix">%</span>
+        </div>
+        <p class="form-hint">Red indicator when usage exceeds this percentage</p>
+      </div>
+    </section>
+
+    <!-- Refresh Settings -->
+    <section class="card">
+      <div class="section-title">🔄 Refresh Settings</div>
+
+      <div class="form-group">
+        <label class="form-label">Auto-refresh Interval</label>
+        <div class="input-group">
+          <input type="number" class="input" value="5" min="0" max="60">
+          <span class="input-suffix">minutes</span>
+        </div>
+        <p class="form-hint">Set to 0 to disable auto-refresh</p>
+      </div>
+    </section>
+
+    <!-- Advanced -->
+    <section class="card">
+      <div class="section-title">🔧 Advanced</div>
+
+      <div class="form-group">
+        <label class="form-label">Elysia Code Path</label>
+        <input type="text" class="input input-full" value="elysia-code">
+        <p class="form-hint">Path to the elysia-code executable</p>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-wrapper" onclick="this.querySelector('.checkbox').classList.toggle('checked')">
+          <div class="checkbox">
+            <span class="checkbox-check">✓</span>
+          </div>
+          <span class="checkbox-text">Show debug output in console</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="button-group">
+      <button class="btn btn-primary">
+        <span>💾</span> Save Changes
+      </button>
+      <button class="btn btn-ghost">
+        <span>↩️</span> Reset to Defaults
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function updateToggleStatus(toggle) {
+      const badge = toggle.closest('.toggle-wrapper').querySelector('.status-badge');
+      const dot = badge.querySelector('.status-dot');
+
+      if (toggle.classList.contains('active')) {
+        badge.classList.remove('inactive');
+        badge.classList.add('active');
+        dot.classList.remove('inactive');
+        dot.classList.add('active');
+        badge.innerHTML = '<span class="status-dot active"></span>Active';
+      } else {
+        badge.classList.remove('active');
+        badge.classList.add('inactive');
+        dot.classList.remove('active');
+        dot.classList.add('inactive');
+        badge.innerHTML = '<span class="status-dot inactive"></span>Inactive';
+      }
+    }
+  </script>
+</body>
+</html>

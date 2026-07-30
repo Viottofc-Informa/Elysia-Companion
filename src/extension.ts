@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       const config = await elysiaService.fetchConfig();
       if (config) {
-        DetailsPanel.show(config, context.extensionUri);
+        DetailsPanel.show(config, context.extensionUri, elysiaService);
       } else {
         vscode.window.showErrorMessage('Failed to fetch Elysia usage details');
       }
@@ -121,6 +121,52 @@ export function activate(context: vscode.ExtensionContext) {
       if (!success) {
         throw new Error(`Failed to change model to ${modelName}`);
       }
+    }),
+
+    // Toggle private mode
+    vscode.commands.registerCommand('elysiaUsage.togglePrivateMode', async () => {
+      if (!elysiaService) {
+        vscode.window.showErrorMessage('Elysia service not initialized');
+        return;
+      }
+
+      // Get current config to determine current state
+      const currentConfig = await elysiaService.fetchConfig();
+      if (!currentConfig) {
+        vscode.window.showErrorMessage('Failed to fetch current configuration');
+        return;
+      }
+
+      const newPrivateState = !currentConfig.isPrivate;
+      const actionText = newPrivateState ? 'enable' : 'disable';
+
+      // Show progress notification
+      await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: `${newPrivateState ? 'Enabling' : 'Disabling'} Private Mode...`,
+        cancellable: false
+      }, async () => {
+        const success = await elysiaService!.togglePrivateMode(newPrivateState);
+
+        if (success) {
+          vscode.window.showInformationMessage(
+            `✅ Private mode ${newPrivateState ? 'enabled' : 'disabled'} successfully!`
+          );
+
+          // Refresh status bar
+          if (statusBarManager) {
+            await statusBarManager.refresh();
+          }
+
+          // Refresh the webview panel if it's open
+          const config = await elysiaService!.fetchConfig();
+          if (config) {
+            DetailsPanel.show(config, context.extensionUri, elysiaService!);
+          }
+        } else {
+          vscode.window.showErrorMessage(`❌ Failed to ${actionText} private mode`);
+        }
+      });
     })
   ];
 
