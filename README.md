@@ -8,12 +8,21 @@ tags:
   - extension
   - usage-tracker
   - model-management
-timestamp: '2026-07-29'
+  - informa
+  - ai-tools
+  - productivity
+  - developer-tools
+  - informa-connect
+timestamp: '2026-07-30'
 ---
 
 # Elysia Companion
 
-A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including usage tracking, model switching, and service control.
+[![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://code.visualstudio.com/)
+[![Informa](https://img.shields.io/badge/Informa-Design%20System-indigo.svg)](https://www.informa.com/)
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
+
+A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including usage tracking, model switching, service control, and privacy mode management — following the official **Informa Design System**.
 
 ---
 
@@ -21,14 +30,35 @@ A VS Code extension that provides comprehensive management for the [Elysia](http
 
 Elysia Companion integrates directly with your VS Code workflow to provide:
 
-- **Usage Monitoring**: Real-time tracking of Elysia credit consumption
-- **Model Management**: Easy switching between AI models (Claude, GPT, Kimi, etc.)
-- **Service Control**: Restart compression service when needed
-- **Visual Status**: Color-coded indicators (🟢🟡🔴) for quick assessment
+- **📊 Usage Monitoring**: Real-time tracking of Elysia credit consumption
+- **🤖 Model Management**: Easy switching between AI models (Claude, GPT, Kimi, etc.)
+- **🔒 Private Mode**: Toggle between Standard (LLM cloud) and Private (local only) modes
+- **🚀 Service Control**: Restart compression service when needed
+- **🎨 Informa Design**: Official Informa color palette and typography
+- **🌓 Dual Theme**: Full Light & Dark mode support with Informa colors
+- **🚦 Visual Status**: Color-coded indicators (🟢🟡🔴) for quick assessment
 
 ---
 
 ## Features
+
+### 🔒 Private Mode Toggle
+
+Quickly switch between Standard and Private modes:
+- **🔓 Standard Mode**: Full LLM cloud features
+- **🔒 Private Mode**: Local-only processing for sensitive work
+- Status bar icon changes to reflect current mode
+- Dashboard button for easy toggle
+- Auto-refreshes panel after mode change
+
+### 🎨 Informa Design System
+
+Official Informa branding applied throughout:
+- **Primary**: Indigo `#002244` (light) / Light Blue `#AAE6FF` (dark)
+- **Accent**: Sky `#28B4FF` for interactive elements
+- **Typography**: Aleo (headings), Open Sans (body)
+- **Semantic Colors**: Mint, Saffron, Coral for status
+- **Spacing**: 8px base scale for applications
 
 ### 🚦 Usage Tracking
 
@@ -239,5 +269,24 @@ For issues and feature requests, please use the [GitHub issue tracker](https://g
 ---
 
 **Maintained by:** Informa AI Team  
+**Publisher:** Informa PLC  
 **Version:** 0.1.0  
-**Last Updated:** 2026-07-29
+**Last Updated:** 2026-07-30  
+**License:** MIT
+
+---
+
+## 🏷️ GitHub Topics / Tags
+
+When configuring your GitHub repository, add these topics:
+
+`elysia` `vscode-extension` `ai-assistant` `code-assistant` `usage-tracker` `model-management` `private-mode` `informa` `informa-connect` `developer-tools` `productivity` `typescript` `anthropic-claude` `openai-gpt` `kimi-ai`
+
+---
+
+## 🌐 Links
+
+- [Elysia Platform](https://elysia.informa.com/)
+- [Informa Website](https://www.informa.com/)
+- [VS Code Extension API](https://code.visualstudio.com/api)
+- [Report Issues](https://github.com/informa/elysia-companion/issues)
