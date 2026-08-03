@@ -126,10 +126,10 @@ export class StatusBarManager {
     const parts: string[] = [];
 
     if (showDollar) {
-      parts.push(`$${config.usedAmount.toFixed(2)}`);
+      parts.push(config.isResetState ? '↺ Reset' : `$${config.usedAmount.toFixed(2)}`);
     }
 
-    if (showPercentage) {
+    if (showPercentage && !config.isResetState) {
       parts.push(`${config.percentage.toFixed(1)}%`);
     }
 
@@ -157,8 +157,8 @@ export class StatusBarManager {
   private buildTooltip(config: ElysiaConfig): vscode.MarkdownString {
     const tooltip = new vscode.MarkdownString();
     tooltip.appendMarkdown(`## Elysia Usage\n\n`);
-    tooltip.appendMarkdown(`**Used:** $${config.usedAmount.toFixed(2)} of $${config.totalAmount.toFixed(2)}\n\n`);
-    tooltip.appendMarkdown(`**Consumed:** ${config.percentage.toFixed(1)}%\n\n`);
+    tooltip.appendMarkdown(`**Used:** ${config.isResetState ? 'Month reset — no usage yet' : `$${config.usedAmount.toFixed(2)} of $${config.totalAmount.toFixed(2)}`}\n\n`);
+    tooltip.appendMarkdown(`**Consumed:** ${config.isResetState ? '0%' : `${config.percentage.toFixed(1)}%`}\n\n`);
     tooltip.appendMarkdown(`---\n\n`);
     tooltip.appendMarkdown(`**Version:** ${config.version}\n\n`);
     tooltip.appendMarkdown(`**Model:** ${config.model}\n\n`);
@@ -188,10 +188,10 @@ export class StatusBarManager {
       const config = await this.elysiaService.fetchConfig();
 
       if (config) {
-        this.outputChannel.appendLine(`[StatusBar] Config received: $${config.usedAmount.toFixed(2)} / $${config.totalAmount.toFixed(2)}`);
+        this.outputChannel.appendLine(`[StatusBar] Config received: ${config.isResetState ? 'month reset' : `$${config.usedAmount.toFixed(2)} / $${config.totalAmount.toFixed(2)}`}`);
         this.updateDisplay(config);
         this.outputChannel.appendLine(
-          `[${new Date().toISOString()}] Updated: $${config.usedAmount.toFixed(2)} / $${config.totalAmount.toFixed(2)} (${config.percentage.toFixed(1)}%)`
+          `[${new Date().toISOString()}] Updated: ${config.isResetState ? 'month reset (0% usage)' : `$${config.usedAmount.toFixed(2)} / $${config.totalAmount.toFixed(2)} (${config.percentage.toFixed(1)}%)`}`
         );
 
         // Also update compression and private status

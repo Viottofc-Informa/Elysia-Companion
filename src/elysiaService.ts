@@ -15,6 +15,8 @@ export interface ElysiaConfig {
   usedAmount: number;
   totalAmount: number;
   percentage: number;
+  /** True when the CLI reports "Used: -" — the monthly usage counter has just reset */
+  isResetState: boolean;
 }
 
 export class ElysiaService {
@@ -217,22 +219,35 @@ export class ElysiaService {
           if (match) config.status = match[1].trim();
         }
 
-        // Parse Usage - format: "Used       : $115.8067 / $200.00"
+        // Parse Usage - normal format:  "Used       : $115.8067 / $200.00"
+        //               reset format:   "Used       : -"
         else if (trimmed.startsWith('Used')) {
           const match = trimmed.match(/:\s*\$([\d.]+)\s*\/\s*\$([\d.]+)/);
           if (match) {
             config.usedAmount = parseFloat(match[1]);
             config.totalAmount = parseFloat(match[2]);
+          } else if (trimmed.match(/:\s*-/)) {
+            // Month just reset — CLI reports "-" for both used and total
+            config.usedAmount = 0;
+            config.totalAmount = 0;
+            config.isResetState = true;
           }
         }
       }
 
-      // Calculate percentage
+      // Calculate percentage (0% when reset state — totalAmount is 0)
       if (config.usedAmount !== undefined && config.totalAmount !== undefined && config.totalAmount > 0) {
         config.percentage = (config.usedAmount / config.totalAmount) * 100;
+      } else {
+        config.percentage = 0;
       }
 
-      // Validate required fields
+      // Default isResetState to false when not set
+      if (config.isResetState === undefined) {
+        config.isResetState = false;
+      }
+
+      // Validate required fields (usedAmount/totalAmount are allowed to be 0 in reset state)
       if (!config.version || config.usedAmount === undefined || config.totalAmount === undefined) {
         this.outputChannel.appendLine('Failed to parse required fields from Elysia config');
         return null;

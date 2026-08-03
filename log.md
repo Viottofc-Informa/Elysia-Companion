@@ -5,6 +5,52 @@
 
 ---
 
+## 2026-08-03 — Handle "Used: -" state when monthly usage resets
+
+### Problem
+At the start of a new billing month, `elysia-code --config` returns:
+```
+Used       : -
+            [-] -
+```
+The extension returned `null` from `fetchConfig()` and the UI went blank.
+
+### Root Cause
+The `parseConfigOutput()` parser used a regex that only matched `$X.XX / $Y.YY`.  
+When the CLI emits `-`, the match failed → `usedAmount` and `totalAmount` stayed `undefined` → validation rejected the config → `fetchConfig()` returned `null`.
+
+### Solution
+Added a second branch in the `Used` parser:
+```typescript
+} else if (trimmed.match(/:\s*-/)) {
+  config.usedAmount = 0;
+  config.totalAmount = 0;
+  config.isResetState = true;
+}
+```
+- New `isResetState: boolean` field on `ElysiaConfig`.
+- Percentage defaults to `0` (instead of crashing on `0/0`).
+- Validation accepts the reset state (0 is a valid amount, not `undefined`).
+
+### UI Changes
+| Location | Before | After |
+|---|---|---|
+| Status bar | blank / loading forever | `🟢 ↺ Reset` |
+| Status bar tooltip | broken | `Used: Month reset — no usage yet` |
+| Dashboard badge | — | `Month Reset` badge |
+| Dashboard amount | `$0.00` | `↺ Month Reset` |
+| Dashboard progress text | `0.0% of $0.00` | `No usage yet this month` |
+
+### Changed
+- **src/elysiaService.ts**: `ElysiaConfig` interface + `parseConfigOutput()` + validation
+- **src/statusBarManager.ts**: `updateDisplay()` + `buildTooltip()` + refresh log
+- **src/detailsPanel.ts**: `getWebviewContent()` status logic + usage card HTML
+
+### Verification
+✅ `npx tsc --noEmit` — no errors
+
+---
+
 ## 2026-07-29 — Project renamed to "Elysia Companion"
 
 ### Changed

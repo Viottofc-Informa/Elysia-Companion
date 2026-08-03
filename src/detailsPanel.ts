@@ -154,7 +154,12 @@ export class DetailsPanel {
     let statusText = 'Healthy';
     let statusClass = 'healthy';
 
-    if (percentage >= 90) {
+    if (config.isResetState) {
+      // Month just reset: show a neutral "Reset" state
+      progressColor = '#6c8ebf';
+      statusText = 'Month Reset';
+      statusClass = 'healthy'; // blue-ish but reuse healthy for clean badge
+    } else if (percentage >= 90) {
       progressColor = '#f14c4c';
       statusText = 'Critical';
       statusClass = 'critical';
@@ -795,12 +800,12 @@ export class DetailsPanel {
             </div>
 
             <div class="usage-summary">
-                <div class="amount-display ${statusClass}">$${config.usedAmount.toFixed(2)}</div>
+                <div class="amount-display ${statusClass}">${config.isResetState ? '↺ Month Reset' : `$${config.usedAmount.toFixed(2)}`}</div>
                 <div class="progress-container">
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill ${statusClass}" style="width: ${progressWidth}%;"></div>
                     </div>
-                    <div class="progress-text">${percentage.toFixed(1)}% of $${config.totalAmount.toFixed(2)}</div>
+                    <div class="progress-text">${config.isResetState ? 'No usage yet this month' : `${percentage.toFixed(1)}% of $${config.totalAmount.toFixed(2)}`}</div>
                 </div>
             </div>
         </div>
