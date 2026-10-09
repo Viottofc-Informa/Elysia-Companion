@@ -232,6 +232,48 @@ Status bar now uses emoji faróis:
 
 ---
 
+## 2026-10-09 — Added Compression Stats tab with detailed metrics
+
+### Added
+- **New tab "Compression"** in dashboard with 3-card layout (Status, Session Savings, Lifetime Savings)
+- **Top Projects section** — collapsible table showing projects with most tokens saved
+- **Top Models section** — collapsible table showing models with most compression
+- **Recent Requests section** — collapsible cards showing last 5 requests with details
+- **New interfaces**: `CompressionStats`, `CompressionSession`, `CompressionLifetime`, `ProjectStats`, `ModelStats`, `RecentRequest`
+- **New service method**: `fetchCompressionStats()` — calls `elysia-code --compression-stats --json`
+- **Helper functions**: `formatNumber()`, `formatTime()` for displaying large numbers and timestamps
+
+### Changed
+- **Dashboard reorganized** into 2 tabs: **Usage** and **Compression**
+- **Usage tab** contains: Model selector (top), Usage Summary, Configuration, Actions (bottom)
+- **Compression tab** contains: Status cards, Session/Lifetime savings, collapsible tables
+- **Tab navigation** added with active state styling
+- Actions available in both tabs for convenience
+
+### Technical
+- **Stat cards**: Responsive grid with hover effects (lift + shadow)
+- **Collapsible sections**: Chevron rotation, smooth height transition (max-height technique)
+- **Data tables**: Striped rows, hover highlight, truncated long text
+- **Request cards**: Grid of metrics showing original → optimized → saved
+
+### Data Pipeline
+```
+CLI: elysia-code --compression-stats --json
+  ↓
+Service.fetchCompressionStats()
+  ↓
+Service.parseCompressionStats(raw)
+  ↓
+DetailsPanel.updateCompressionStats(stats)
+  ↓
+WebView displays cards + tables
+```
+
+### Verification
+🔄 Pending — needs compilation test + manual UI verification
+
+---
+
 ## Maintenance Guidelines
 
 1. **Add entries** for every meaningful change

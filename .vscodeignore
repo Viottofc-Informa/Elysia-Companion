@@ -9,5 +9,17 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 
+# Build scripts (not needed in extension)
+build-and-package.ps1
+build-and-package.cmd
+*.ps1
+*.cmd
+
+# Development files
+log.md
+CLAUDE.md
+architecture/**
+handoffs/**
+
 !out/**
 !node_modules/**/

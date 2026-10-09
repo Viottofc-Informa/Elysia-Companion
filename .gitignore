@@ -5,8 +5,9 @@ node_modules/
 out/
 dist/
 
-# VS Code extension
+# VS Code extension — ignore VSIX everywhere except releases/
 *.vsix
+!releases/*.vsix
 
 # Local settings
 .vscode-test/

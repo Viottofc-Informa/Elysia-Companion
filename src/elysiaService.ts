@@ -19,6 +19,70 @@ export interface ElysiaConfig {
   isResetState: boolean;
 }
 
+// Compression stats interfaces
+export interface CompressionSession {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  cacheSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  savingsPercent: number;
+  startedAt: string;
+  lastActivityAt: string;
+}
+
+export interface CompressionLifetime {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  cacheSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+}
+
+export interface ProjectStats {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  lastActivityAt: string;
+  savingsPercent: number;
+}
+
+export interface ModelStats {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  savingsPercent: number;
+}
+
+export interface RecentRequest {
+  requestId: string;
+  timestamp: string;
+  model: string;
+  inputTokensOriginal: number;
+  inputTokensOptimized: number;
+  outputTokens: number;
+  tokensSaved: number;
+  savingsPercent: number;
+  transformsApplied: string[];
+}
+
+export interface CompressionStats {
+  enabled: boolean;
+  port: number;
+  mode: string;
+  session: CompressionSession;
+  lifetime: CompressionLifetime;
+  projects: Record<string, ProjectStats>;
+  byModel: Record<string, ModelStats>;
+  recentRequests: RecentRequest[];
+}
+
 export class ElysiaService {
   private outputChannel: vscode.OutputChannel;
 
@@ -543,5 +607,120 @@ export class ElysiaService {
       this.outputChannel.appendLine(`[ElysiaService] Error toggling private mode: ${errorMessage}`);
       return false;
     }
+  }
+
+  // Fetch compression stats from --compression-stats --json
+  async fetchCompressionStats(): Promise<CompressionStats | null> {
+    try {
+      const config = vscode.workspace.getConfiguration('elysiaUsage');
+      const elysiaCodePath = config.get<string>('elysiaCodePath', 'elysia-code');
+      const commandPath = await this.resolveElysiaCommand(elysiaCodePath);
+
+      // Build the command
+      const isWindows = process.platform === 'win32';
+      const isCmdFile = commandPath.toLowerCase().endsWith('.cmd');
+      const execPath = isWindows && isCmdFile
+        ? `"${commandPath}"`
+        : commandPath;
+
+      this.outputChannel.appendLine(`[ElysiaService] Fetching compression stats...`);
+      const { stdout, stderr } = await execAsync(`${execPath} --compression-stats --json`, {
+        timeout: 30000,
+        windowsHide: true,
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+      });
+
+      const output = stdout || stderr || '';
+      this.outputChannel.appendLine(`[ElysiaService] Compression stats received (${output.length} chars)`);
+
+      // Parse JSON response
+      const stats = JSON.parse(output);
+
+      // Transform raw stats into our interface
+      return this.parseCompressionStats(stats);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.outputChannel.appendLine(`[ElysiaService] Error fetching compression stats: ${errorMessage}`);
+      return null;
+    }
+  }
+
+  // Parse raw compression stats JSON into typed structure
+  private parseCompressionStats(raw: any): CompressionStats {
+    const displaySession = raw.stats?.display_session || {};
+    const persistentSavings = raw.stats?.persistent_savings || {};
+    const projects = raw.stats?.savings?.per_project || {};
+    const byModel = persistentSavings.by_model || {};
+    const recentRequests = raw.stats?.recent_requests?.slice(0, 5) || [];
+
+    // Transform recent requests
+    const parsedRequests: RecentRequest[] = recentRequests.map((req: any) => ({
+      requestId: req.request_id,
+      timestamp: req.timestamp,
+      model: req.model,
+      inputTokensOriginal: req.input_tokens_original,
+      inputTokensOptimized: req.input_tokens_optimized,
+      outputTokens: req.output_tokens,
+      tokensSaved: req.tokens_saved,
+      savingsPercent: req.savings_percent,
+      transformsApplied: req.transforms_applied || []
+    }));
+
+    // Transform projects
+    const parsedProjects: Record<string, ProjectStats> = {};
+    for (const [name, data] of Object.entries(projects)) {
+      const p = data as any;
+      parsedProjects[name] = {
+        requests: p.requests,
+        tokensSaved: p.tokens_saved,
+        compressionSavingsUsd: p.compression_savings_usd,
+        totalInputTokens: p.total_input_tokens,
+        totalInputCostUsd: p.total_input_cost_usd,
+        lastActivityAt: p.last_activity_at,
+        savingsPercent: p.savings_percent
+      };
+    }
+
+    // Transform models
+    const parsedModels: Record<string, ModelStats> = {};
+    for (const [name, data] of Object.entries(byModel)) {
+      const m = data as any;
+      parsedModels[name] = {
+        requests: m.requests,
+        tokensSaved: m.tokens_saved,
+        compressionSavingsUsd: m.compression_savings_usd,
+        totalInputTokens: m.total_input_tokens,
+        totalInputCostUsd: m.total_input_cost_usd,
+        savingsPercent: m.savings_percent
+      };
+    }
+
+    return {
+      enabled: raw.enabled ?? false,
+      port: raw.port ?? 8787,
+      mode: raw.stats?.summary?.mode || 'unknown',
+      session: {
+        requests: displaySession.requests || 0,
+        tokensSaved: displaySession.tokens_saved || 0,
+        compressionSavingsUsd: displaySession.compression_savings_usd || 0,
+        cacheSavingsUsd: displaySession.cache_savings_usd || 0,
+        totalInputTokens: displaySession.total_input_tokens || 0,
+        totalInputCostUsd: displaySession.total_input_cost_usd || 0,
+        savingsPercent: displaySession.savings_percent || 0,
+        startedAt: displaySession.started_at || '',
+        lastActivityAt: displaySession.last_activity_at || ''
+      },
+      lifetime: {
+        requests: persistentSavings.lifetime?.requests || 0,
+        tokensSaved: persistentSavings.lifetime?.tokens_saved || 0,
+        compressionSavingsUsd: persistentSavings.lifetime?.compression_savings_usd || 0,
+        cacheSavingsUsd: persistentSavings.lifetime?.cache_savings_usd || 0,
+        totalInputTokens: persistentSavings.lifetime?.total_input_tokens || 0,
+        totalInputCostUsd: persistentSavings.lifetime?.total_input_cost_usd || 0
+      },
+      projects: parsedProjects,
+      byModel: parsedModels,
+      recentRequests: parsedRequests
+    };
   }
 }

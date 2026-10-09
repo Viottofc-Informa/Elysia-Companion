@@ -86,33 +86,36 @@ interface ModelsResponse {
 ```
 elysia-companion/
 ├── .vscode/
-│   └── launch.json           # Debug configuration
+│   └── launch.json              # Debug configuration
 ├── out/
-│   ├── extension.js          # Compiled entry point
-│   ├── elysiaService.js      # Core service
-│   ├── statusBarManager.js   # UI: Status bar
-│   └── detailsPanel.js       # UI: Webview
+│   ├── extension.js             # Compiled entry point
+│   ├── elysiaService.js         # Core service
+│   ├── statusBarManager.js      # UI: Status bar
+│   └── detailsPanel.js          # UI: Webview
 ├── src/
-│   ├── extension.ts          # Entry point, command registration
-│   ├── elysiaService.ts      # CLI communication, parsing ★
-│   ├── statusBarManager.ts   # Status bar lifecycle
-│   ├── detailsPanel.ts       # Webview HTML/JS/CSS
+│   ├── extension.ts             # Entry point, command registration
+│   ├── elysiaService.ts         # CLI communication, parsing ★
+│   ├── statusBarManager.ts      # Status bar lifecycle
+│   ├── detailsPanel.ts          # Webview HTML/JS/CSS with tabs
 │   └── test/
-│       └── runTest.ts        # Test runner
+│       └── runTest.ts           # Test runner
 ├── architecture/
-│   ├── design.md             # Why spawn vs exec
-│   └── spec.md               # Data contracts
+│   ├── design.md                # Why spawn vs exec
+│   └── spec.md                  # Data contracts
 ├── handoffs/
 │   ├── handoff_change_model_test.md      # Model change debugging
 │   └── handoff_change_model_test_v2.md   # Results & fixes
-├── .vscodeignore             # Package exclusions
-├── CHANGELOG.md              # Version history
-├── CLAUDE.md                # ← This file
-├── LICENSE                  # MIT
-├── package.json             # Extension manifest
-├── README.md                # User documentation
-├── SETUP_GUIDE.md           # Installation guide
-└── tsconfig.json            # TypeScript config
+├── build-and-package.ps1      # Build script (PowerShell)
+├── build-and-package.cmd      # Build script (Command)
+├── .vscodeignore                # Package exclusions
+├── CHANGELOG.md                 # Version history
+├── CLAUDE.md                   # ← This file
+├── LICENSE                     # MIT
+├── package.json                # Extension manifest
+├── README.md                   # User documentation
+├── SETUP_GUIDE.md              # Installation guide
+├── log.md                      # Development log
+└── tsconfig.json               # TypeScript config
 ```
 
 ---
@@ -171,10 +174,14 @@ webview.onDidReceiveMessage(async (msg) => {
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Usage Tracking | ✅ | Status bar with lighthouse indicators |
-| Dashboard | ✅ | Webview with buttons |
+| Dashboard | ✅ | Webview with 2 tabs: **Usage** and **Compression** |
 | Restart Service | ✅ | Fixed compression restart with execAsync |
 | Change Model | ✅ | Working after fixing exec pattern |
-| Model Selector | ✅ | Dropdown with active badge |
+| Model Selector | ✅ | Dropdown with active badge in **Usage tab** |
+| **Compression Stats** | ✅ | **v0.2.0** — Detailed metrics from `--compression-stats --json` |
+| **Session/Lifetime Savings** | ✅ | **v0.2.0** — Tokens and USD saved display |
+| **Top Projects/Models** | ✅ | **v0.2.0** — Collapsible tables with top 5 each |
+| **Recent Requests** | ✅ | **v0.2.0** — Last 5 requests with detailed metrics |
 | Settings | ✅ | Configurable thresholds |
 | Auto-refresh | ✅ | Every 5 minutes |
 

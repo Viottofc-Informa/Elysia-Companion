@@ -1,28 +1,32 @@
 ---
 type: Documentation
 title: Elysia Companion
-resource: https://github.com/informa/elysia-companion
+resource: https://github.com/Viottofc-Informa/Elysia-Companion
 tags:
   - elysia
   - vscode
   - extension
   - usage-tracker
   - model-management
+  - compression-stats
   - informa
   - ai-tools
   - productivity
   - developer-tools
   - informa-connect
-timestamp: '2026-07-30'
+timestamp: '2026-10-09'
 ---
 
 # Elysia Companion
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://code.visualstudio.com/)
 [![Informa](https://img.shields.io/badge/Informa-Design%20System-indigo.svg)](https://www.informa.com/)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](CHANGELOG.md)
+[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.2.0.vsix)
 
-A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including usage tracking, model switching, service control, and privacy mode management — following the official **Informa Design System**.
+A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
+
+> **Latest Release:** v0.2.0 — [Download VSIX](releases/elysia-companion-0.2.0.vsix) | New: Compression Stats tab with detailed metrics!
 
 ---
 
@@ -31,12 +35,14 @@ A VS Code extension that provides comprehensive management for the [Elysia](http
 Elysia Companion integrates directly with your VS Code workflow to provide:
 
 - **📊 Usage Monitoring**: Real-time tracking of Elysia credit consumption
+- **📉 Compression Stats**: Detailed metrics — tokens saved, USD saved, top projects/models
 - **🤖 Model Management**: Easy switching between AI models (Claude, GPT, Kimi, etc.)
 - **🔒 Private Mode**: Toggle between Standard (LLM cloud) and Private (local only) modes
 - **🚀 Service Control**: Restart compression service when needed
 - **🎨 Informa Design**: Official Informa color palette and typography
 - **🌓 Dual Theme**: Full Light & Dark mode support with Informa colors
 - **🚦 Visual Status**: Color-coded indicators (🟢🟡🔴) for quick assessment
+- **📑 Tabbed Dashboard**: Usage tab for daily tasks, Compression tab for analytics
 
 ---
 
@@ -94,26 +100,38 @@ Click status bar to see:
 
 ## Installation
 
-### From VSIX (Recommended for Teams)
+### Quick Install (Latest Release)
+
+**Download:** [elysia-companion-0.2.0.vsix](releases/elysia-companion-0.2.0.vsix)
 
 ```powershell
-code --install-extension elysia-companion-0.1.0.vsix
+# Download and install in one command
+Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/releases/download/v0.2.0/elysia-companion-0.2.0.vsix" -OutFile "elysia-companion-0.2.0.vsix"
+code --install-extension elysia-companion-0.2.0.vsix
 ```
+
+### From VSIX (Recommended for Teams)
+
+1. Download the latest `.vsix` from [releases/](releases/)
+2. Install via command line:
+   ```powershell
+   code --install-extension elysia-companion-0.2.0.vsix
+   ```
+3. Or drag-and-drop the `.vsix` file into VS Code Extensions panel
 
 ### From VS Code Marketplace
 
-1. Open VS Code Extensions (`Ctrl+Shift+X`)
-2. Search: "Elysia Companion"
-3. Click Install
+_Coming soon — not yet published_ ⏳
 
 ### From Source
 
 ```bash
-git clone https://github.com/informa/elysia-companion.git
+git clone https://github.com/Viottofc-Informa/Elysia-Companion.git
 cd elysia-companion
 npm install
 npm run compile
-code --install-extension elysia-companion-0.1.0.vsix
+npx vsce package --no-dependencies
+code --install-extension elysia-companion-0.2.0.vsix
 ```
 
 ---
@@ -270,8 +288,8 @@ For issues and feature requests, please use the [GitHub issue tracker](https://g
 
 **Maintained by:** Informa AI Team  
 **Publisher:** Informa PLC  
-**Version:** 0.1.0  
-**Last Updated:** 2026-07-30  
+**Version:** 0.2.0  
+**Last Updated:** 2026-10-09  
 **License:** MIT
 
 ---
