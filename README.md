@@ -106,7 +106,7 @@ Click status bar to see:
 
 ```powershell
 # Download and install in one command
-Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/releases/download/v0.2.0/elysia-companion-0.2.0.vsix" -OutFile "elysia-companion-0.2.0.vsix"
+Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix" -OutFile "elysia-companion-0.2.0.vsix"
 code --install-extension elysia-companion-0.2.0.vsix
 ```
 
