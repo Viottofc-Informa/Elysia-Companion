@@ -94,6 +94,7 @@ code --install-extension https://github.com/Viottofc-Informa/Elysia-Companion/re
 - **Model Selector:** Fixed position at top of Usage tab for easier access
 - **Action Buttons:** Available in both tabs (Usage and Compression)
 - **Tab Navigation:** Simplified to 2 tabs instead of 3 for better UX
+- **Compression status bar item not clickable** (ADR-007): `elysiaUsage.showCompressionDetails` and `elysiaUsage.togglePrivateMode` were registered in code but missing from `package.json` → `contributes.commands`. VS Code requires the manifest declaration to make a status bar item interactive. Both are now declared, so the Compression icon opens the dashboard directly on the Compression tab.
 
 ---
 

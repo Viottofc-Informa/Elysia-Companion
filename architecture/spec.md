@@ -7,7 +7,7 @@ tags:
   - schema
   - types
   - contract
-timestamp: '2026-07-29'
+timestamp: '2026-10-13'
 ---
 
 # Elysia Companion — Data Contracts
@@ -145,42 +145,218 @@ Failure (typically no output or error message)
 
 ---
 
+## Compression Stats Output (v0.2.0)
+
+### Source
+
+```
+elysia-code --compression-stats --json
+```
+
+Returns a single JSON object. The extension consumes a **subset** of the ~40 top-level keys.
+
+### Full JSON shape (abridged)
+
+```
+{
+  "enabled": true,
+  "port": 8787,
+  "stats": {
+    "summary": { "mode": "cache", "api_requests": 15, ... },
+    "display_session": { ... },        // → session
+    "persistent_savings": {
+      "lifetime": { ... },             // → lifetime
+      "projects": { ... },             // → projects
+      "by_model": { ... }              // → byModel
+    },
+    "recent_requests": [ ... ],        // → recentRequests (first 5)
+    "savings_history": [ ... ],        // NOT consumed
+    "pipeline_timing": { ... },        // NOT consumed
+    "throughput": { ... },             // NOT consumed
+    "telemetry": { ... },              // NOT consumed
+    "otel": { ... },                   // NOT consumed
+    "rollout": { ... }                 // NOT consumed
+  }
+}
+```
+
+### Consumed fields → typed model
+
+| JSON path | Typed field | Type |
+|-----------|-------------|------|
+| `enabled` | `enabled` | `boolean` |
+| `port` | `port` | `number` |
+| `stats.summary.mode` | `mode` | `string` |
+| `stats.display_session.*` | `session` | `CompressionSession` |
+| `stats.persistent_savings.lifetime.*` | `lifetime` | `CompressionLifetime` |
+| `stats.persistent_savings.projects.*` | `projects` | `Record<string, ProjectStats>` |
+| `stats.persistent_savings.by_model.*` | `byModel` | `Record<string, ModelStats>` |
+| `stats.recent_requests[0..4]` | `recentRequests` | `RecentRequest[]` |
+
+### Parsing rules
+
+1. Parse the entire stdout as JSON — **no line-based parsing** (unlike `--config` and `--models`).
+2. Default missing scalars to `0` / `false` / `''` rather than throwing; the CLI omits keys in some states.
+3. Slice `recent_requests` to 5 entries for display.
+4. Discard all keys not listed in the table above.
+
+### Type definitions
+
+```typescript
+interface CompressionStats {
+  enabled: boolean;
+  port: number;
+  mode: string;
+  session: CompressionSession;
+  lifetime: CompressionLifetime;
+  projects: Record<string, ProjectStats>;
+  byModel: Record<string, ModelStats>;
+  recentRequests: RecentRequest[];
+}
+
+interface CompressionSession {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  cacheSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  savingsPercent: number;
+  startedAt: string;
+  lastActivityAt: string;
+}
+
+interface CompressionLifetime {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  cacheSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+}
+
+interface ProjectStats {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  lastActivityAt: string;
+  savingsPercent: number;
+}
+
+interface ModelStats {
+  requests: number;
+  tokensSaved: number;
+  compressionSavingsUsd: number;
+  totalInputTokens: number;
+  totalInputCostUsd: number;
+  savingsPercent: number;
+}
+
+interface RecentRequest {
+  requestId: string;
+  timestamp: string;
+  model: string;
+  inputTokensOriginal: number;
+  inputTokensOptimized: number;
+  outputTokens: number;
+  tokensSaved: number;
+  savingsPercent: number;
+  transformsApplied: string[];
+}
+```
+
+### UI presentation
+
+| Section | Component | Collapsible |
+|---------|-----------|-------------|
+| Status + Mode | Stat cards | No |
+| Session Savings | Stat cards (tokens, USD, requests) | No |
+| Lifetime Savings | Stat cards (tokens, USD, requests) | No |
+| Top Projects | Table (top 5, sorted by tokens saved) | Yes |
+| Top Models | Table (top 5, sorted by tokens saved) | Yes |
+| Recent Requests | Request cards (last 5) | Yes |
+
+Numbers are abbreviated with `formatNumber()` (`1.2K`, `32.1M`). Timestamps use `formatTime()` (local 2-digit HH:MM:SS).
+
+---
+
 ## VS Code Extension API Contracts
 
 ### Registered Commands
 
+Every command listed here **must** also be declared in `package.json` under `contributes.commands`.
+An undeclared command cannot be assigned to a status bar item — the item stays non-clickable (see ADR-007 in `design.md`).
+
 ```typescript
-// Commands registered in extension.ts
+// Commands registered in extension.ts (and declared in package.json)
 interface Commands {
   'elysiaUsage.refresh': () => Promise<void>;
-  'elysiaUsage.showDetails': () => Promise<void>;
+  'elysiaUsage.showDetails': () => Promise<void>;                // opens dashboard on Usage tab
+  'elysiaUsage.showCompressionDetails': () => Promise<void>;     // opens dashboard on Compression tab
   'elysiaUsage.openSettings': () => void;
   'elysiaUsage.restartCompression': () => Promise<void>;
+  'elysiaUsage.togglePrivateMode': () => Promise<void>;
   'elysiaUsage.getModels': () => Promise<ModelsResponse>;
   'elysiaUsage.changeModel': (modelName: string) => Promise<void>;
 }
 ```
 
-### Status Bar Item
+> **Consistency check:** the 8 IDs above must match `contributes.commands` in `package.json` exactly.
+> Verification: `node -e "require('./package.json').contributes.commands.forEach(c=>console.log(c.command))"` against
+> `grep -oE "registerCommand\('[^']+'" src/extension.ts`.
+>
+> `elysiaUsage.loadCompressionStats` was previously registered as a command but never invoked — compression
+> stats are fetched by `DetailsPanel` via the `loadCompressionStats` **WebView message**, not the command bus.
+> The dead command and its `CompressionStats` import were removed.
+
+### Status Bar Items
 
 ```typescript
 interface StatusBarItem {
-  text: string;           // "🟢 $XXX.XX / XX.X%"
+  text: string;             // "🟢 $XXX.XX / XX.X%"
   tooltip: MarkdownString;  // Hover content
-  command: string;        // "elysiaUsage.showDetails"
+  command: string;          // must be a declared command ID
   backgroundColor?: ThemeColor;
+  priority: number;         // alignment order
 }
 ```
+
+| Item | Priority | Text | Command |
+|------|----------|------|---------|
+| Usage | 100 | `🟢 $X.XX / XX.X%` | `elysiaUsage.showDetails` |
+| Compression | 99 | `🟢 Compression` | `elysiaUsage.showCompressionDetails` |
+| Private | 98 | `🔓 Standard` / `🔒 Private` | `elysiaUsage.togglePrivateMode` |
+
+### Tab Selection
+
+`DetailsPanel.show()` accepts an optional `initialTab` parameter that is forwarded to the WebView
+via the `init` message, so the panel can open directly on either tab.
+
+```typescript
+DetailsPanel.show(
+  config: ElysiaConfig,
+  extensionUri: vscode.Uri,
+  elysiaService?: ElysiaService,
+  initialTab?: 'usage' | 'compression'
+): void;
+```
+
+If the panel is already open, `show()` reveals it and posts a `switchTab` message instead of recreating it.
 
 ### WebView Communication
 
 **Extension → WebView:**
 ```typescript
 type WebViewMessage =
-  | { type: 'init'; extensionUri: string }
+  | { type: 'init'; extensionUri: string; initialTab: 'usage' | 'compression' }
+  | { type: 'switchTab'; tab: 'usage' | 'compression' }
   | { type: 'modelsLoaded'; models: string[]; activeModel: string }
   | { type: 'modelChanged' }
-  | { type: 'modelChangeError'; error: string };
+  | { type: 'modelChangeError'; error: string }
+  | { type: 'compressionStatusLoaded'; enabled: boolean }
+  | { type: 'compressionStatsLoaded'; stats: CompressionStats | null };
 ```
 
 **WebView → Extension:**
@@ -189,8 +365,11 @@ type ExtensionMessage =
   | { command: 'refresh' }
   | { command: 'openSettings' }
   | { command: 'restartCompression' }
+  | { command: 'togglePrivateMode' }
   | { command: 'loadModels' }
-  | { command: 'changeModel'; model: string };
+  | { command: 'changeModel'; model: string }
+  | { command: 'loadCompressionStatus' }
+  | { command: 'loadCompressionStats' };
 ```
 
 ---
@@ -297,5 +476,5 @@ Restart Claude Code to apply the change.
 
 ---
 
-**Last Updated:** 2026-07-29  
+**Last Updated:** 2026-10-13  
 **Maintained by:** Informa AI Team

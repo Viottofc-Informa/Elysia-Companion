@@ -11,7 +11,9 @@ All notable changes to the "Elysia Companion" extension will be documented in th
 - **Top Projects Table**: Collapsible table showing top 5 projects by tokens saved with request counts and savings percentages
 - **Top Models Table**: Collapsible table showing top 5 models with compression efficiency
 - **Recent Requests Cards**: Last 5 requests with detailed metrics (original → optimized → saved tokens)
-- **Build Scripts**: Added `build-and-package.ps1` and `build-and-package.cmd` for easy VSIX generation
+- **Compression Status Bar Item**: Clicking it opens the dashboard directly on the Compression tab
+- **Build Scripts**: Added `build-and-package.ps1`, `build-and-package.cmd`, `build-release.ps1`, `build-release.sh` for easy VSIX generation
+- **Versioned VSIX**: Package committed to `releases/` for direct download from GitHub
 
 ### Changed
 - **Dashboard Redesign**: Split into 2 tabs: **Usage** (model, usage, config, actions) and **Compression** (stats, projects, models, requests)
@@ -19,9 +21,14 @@ All notable changes to the "Elysia Companion" extension will be documented in th
 - **Model Selector**: Kept at top of **Usage tab** for easy access
 - **Actions**: Available in both tabs (Refresh, Restart, Settings in Usage; Refresh Stats, Restart in Compression)
 
+### Fixed
+- **Compression status bar item not clickable** (ADR-007): The commands `elysiaUsage.showCompressionDetails` and `elysiaUsage.togglePrivateMode` were registered in code but missing from `package.json` → `contributes.commands`. VS Code requires the manifest declaration to make a status bar item interactive. Both are now declared.
+
 ### Technical
 - New interfaces: `CompressionStats`, `CompressionSession`, `CompressionLifetime`, `ProjectStats`, `ModelStats`, `RecentRequest`
 - New service method: `fetchCompressionStats()` with JSON parsing
+- `DetailsPanel.show()` accepts an optional `initialTab: 'usage' | 'compression'` parameter
+- New WebView messages: `switchTab` (extension → webview), `loadCompressionStats` (webview → extension)
 - Helper functions: `formatNumber()` (K/M), `formatTime()` for better readability
 - Version bump: 0.1.0 → 0.2.0
 

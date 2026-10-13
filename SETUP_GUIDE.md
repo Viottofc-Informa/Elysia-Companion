@@ -1,21 +1,21 @@
 ---
 type: Documentation
 title: Elysia Companion - Setup Guide
-resource: https://github.com/informa/elysia-companion
+resource: https://github.com/Viottofc-Informa/Elysia-Companion
 tags:
   - setup
   - installation
   - configuration
   - elysia
   - vscode
-timestamp: '2026-07-29'
+timestamp: '2026-10-13'
 ---
 
 # Elysia Companion — Setup & Installation Guide
 
 > **One-time setup per workstation** | Support: Informa AI Team
 >
-> **Extension:** elysia-companion | **Version:** 0.1.0 | **License:** MIT
+> **Extension:** elysia-companion | **Version:** 0.2.0 | **License:** MIT
 
 ---
 
@@ -39,9 +39,13 @@ Before installing the extension, ensure:
 
 ## Download the Extension
 
-1. Obtain the latest `.vsix` file:
-   - From the shared drive: `\\shared\ai-tools\elysia-companion-latest.vsix`
-   - Or download from: [internal repository/link]
+1. Download the latest `.vsix` file:
+   - **Direct:** [elysia-companion-0.2.0.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix)
+   - **Releases page:** [github.com/Viottofc-Informa/Elysia-Companion/releases](https://github.com/Viottofc-Informa/Elysia-Companion/releases)
+   - **Or via PowerShell one-liner:**
+     ```powershell
+     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.2.0.vsix"
+     ```
 
 2. Save to your **Downloads** folder or a known location
 
@@ -69,12 +73,12 @@ Before installing the extension, ensure:
 
 ```powershell
 # Windows PowerShell
-& code --install-extension "C:\Users\$env:USERNAME\Downloads\elysia-companion-0.1.0.vsix"
+& code --install-extension "C:\Users\$env:USERNAME\Downloads\elysia-companion-0.2.0.vsix"
 ```
 
 ```bash
 # macOS/Linux
-code --install-extension ~/Downloads/elysia-companion-0.1.0.vsix
+code --install-extension ~/Downloads/elysia-companion-0.2.0.vsix
 ```
 
 ---
@@ -138,8 +142,8 @@ which elysia-code || find ~/.local/bin -name "elysia-code*" 2>/dev/null
    > ⚠️ **Important for Windows**: Include `.cmd` extension if present
 
 5. **Optional**: Adjust other settings:
-   - **Warning Threshold**: 75% (default)
-   - **Critical Threshold**: 90% (default)
+   - **Warning Threshold**: 45% (default)
+   - **Critical Threshold**: 85% (default)
    - **Refresh Interval**: 300000ms = 5 minutes (default)
 
 ### Alternative: Edit settings.json Directly
@@ -149,8 +153,8 @@ Press `Ctrl+Shift+P` → "Preferences: Open User Settings (JSON)" and add:
 ```json
 {
   "elysiaUsage.elysiaCodePath": "C:\\Users\\johndoe\\.local\\bin\\elysia-code.cmd",
-  "elysiaUsage.warningThreshold": 75,
-  "elysiaUsage.criticalThreshold": 90,
+  "elysiaUsage.warningThreshold": 45,
+  "elysiaUsage.criticalThreshold": 85,
   "elysiaUsage.refreshInterval": 300000
 }
 ```
@@ -163,9 +167,9 @@ Press `Ctrl+Shift+P` → "Preferences: Open User Settings (JSON)" and add:
 
 ### 1. Status Bar Should Appear
 
-Look at the **bottom right** of VS Code. You should see:
+Look at the **bottom right** of VS Code. You should see **three** items:
 ```
-✓ $XXX.XX / XX.X%
+🟢 Compression     🔓 Standard     🟢 $XXX.XX / XX.X%
 ```
 
 If you see:
@@ -174,10 +178,19 @@ If you see:
 
 ### 2. Test the Dashboard
 
-Click on the status bar item. A new tab should open showing:
-- 📊 **Elysia Usage Dashboard**
-- Usage Summary with visual progress bar
-- Configuration details (version, model, workspace)
+Click the **usage item** (`🟢 $XXX.XX / XX.X%`). A panel opens on the **Usage** tab with:
+- 🤖 AI Model selector (top)
+- 📈 Usage Summary with visual progress bar
+- ⚙️ Configuration details (version, workspace, config ID, compression state, Private Mode)
+- ⚡ Actions (Refresh, Restart, Settings)
+
+Click the **compression item** (`🟢 Compression`). The same panel opens on the **Compression** tab with:
+- 🚀 Status and Mode cards
+- 💰 Session Savings and 💎 Lifetime Savings
+- 📁 Top Projects, 🤖 Top Models, 🕐 Recent Requests (collapsible)
+
+> Both status bar items require the commands to be declared in `package.json`. If an item does not
+> become clickable (no hover highlight), the manifest declaration is missing — see ADR-007 in `architecture/design.md`.
 
 ### 3. Check Output Logs
 
@@ -189,6 +202,7 @@ If something's wrong, check the logs:
    - `Found elysia-code at: [path]`
    - `Executing: cmd.exe /c [path] --config`
    - `Command output received (XXX chars), exit code: 0`
+   - `[ElysiaService] Fetching compression stats...`
 
 ---
 
@@ -245,6 +259,35 @@ If something's wrong, check the logs:
 2. Run `elysia-code --config` manually and verify output format
 3. Contact support if output format changed
 
+### ❌ Compression tab shows "Loading compression stats..." forever
+
+**Cause:** `elysia-code --compression-stats --json` failed or returned invalid JSON
+
+**Solutions:**
+
+1. **Test the CLI directly:**
+   ```powershell
+   elysia-code --compression-stats --json
+   ```
+   Should return a JSON object starting with `{"enabled": ...`
+
+2. **Verify compression is enabled:**
+   ```powershell
+   elysia-code --compression-enable
+   ```
+
+3. **Check Output logs** (`Ctrl+Shift+U` → "Elysia Usage Tracker") for
+   `[ElysiaService] Error fetching compression stats: ...`
+
+4. **Requires CLI ≥ 0.4.0** — older versions do not support the `--json` flag.
+
+### ❌ Status bar item is not clickable
+
+**Cause:** The command assigned to the status bar item is not declared in `package.json` (`contributes.commands`)
+
+**Solution:** This is a build defect, not a user configuration problem. Reinstall the latest `.vsix`.
+For developers, see ADR-007 in `architecture/design.md` — every command must appear in both the manifest and `extension.ts`.
+
 ---
 
 ## Uninstallation
@@ -252,7 +295,7 @@ If something's wrong, check the logs:
 If you need to remove the extension:
 
 1. Open **Extensions** (`Ctrl+Shift+X`)
-2. Find "Elysia Usage Tracker"
+2. Find "Elysia Companion"
 3. Click **Uninstall**
 4. Reload VS Code
 
@@ -295,6 +338,7 @@ The status bar should show your usage in the bottom right.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.2.0 | 2026-10-09 | Compression Stats tab; 2-tab dashboard; compression status bar item; build scripts |
 | 0.1.0 | 2026-07-27 | Initial release |
 
 ---

@@ -1,27 +1,30 @@
 ---
 type: Index
 title: Elysia Companion - Documentation Index
-resource: https://github.com/informa/elysia-companion
+resource: https://github.com/Viottofc-Informa/Elysia-Companion
 tags:
   - index
   - navigation
   - documentation
-timestamp: '2026-07-29'
+timestamp: '2026-10-13'
 ---
 
 # Elysia Companion — Documentation Index
+
+> **Version:** 0.2.0 | **Status:** Production Ready
 
 ## Quick Links
 
 - [Project Overview](../CLAUDE.md) — North Star, data schema, file structure
 - [User Documentation](../README.md) — Installation, usage, troubleshooting
 - [Setup Guide](../SETUP_GUIDE.md) — Step-by-step installation
+- [Release Notes](../RELEASE_NOTES.md) — Latest version highlights
 - [Changelog](../CHANGELOG.md) — Version history
 - [Development Log](../log.md) — Detailed change history
 
 ## Architecture Documents
 
-- [Design](design.md) — Architecture Decisions (ADRs)
+- [Design](design.md) — Architecture Decisions (ADRs, 7 records)
 - [Specification](spec.md) — Data contracts and schemas
 
 ## Development
@@ -29,6 +32,8 @@ timestamp: '2026-07-29'
 - Source code: `src/` directory
 - Tests: `src/test/` directory
 - Build output: `out/` directory
+- Packaged extension: `releases/` directory
+- Build scripts: `build-release.ps1`, `build-and-package.ps1`, `build-and-package.cmd`
 
 ---
 
@@ -38,8 +43,9 @@ timestamp: '2026-07-29'
 2. **Need to install?** → See [SETUP_GUIDE.md](../SETUP_GUIDE.md)
 3. **Found a bug?** → Check [log.md](../log.md) for recent changes
 4. **Want to contribute?** → Read [CLAUDE.md](../CLAUDE.md) §6 Development Guide
+5. **Releasing a new version?** → See [CLAUDE.md](../CLAUDE.md) §10 Release Process
 
 ---
 
 **Maintained by:** Informa AI Team  
-**Last Updated:** 2026-07-29
+**Last Updated:** 2026-10-13

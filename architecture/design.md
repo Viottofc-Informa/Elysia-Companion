@@ -7,7 +7,7 @@ tags:
   - design
   - adr
   - decisions
-timestamp: '2026-07-29'
+timestamp: '2026-10-13'
 ---
 
 # Elysia Companion — Architecture Design
@@ -170,6 +170,50 @@ Use VS Code `settings.json` with `contributes.configuration` in `package.json`.
 
 ---
 
+## ADR-007: Commands must be declared in package.json
+
+### Status
+✅ Accepted
+
+### Context
+A new command, `elysiaUsage.showCompressionDetails`, was registered in `extension.ts` via
+`vscode.commands.registerCommand()` and assigned to the Compression status bar item through
+`compressionStatusItem.command`. The item rendered correctly but was **not selectable** — no
+hover highlight and no click handler — while the Usage item behaved normally.
+
+### Root Cause
+The command was never declared in `package.json` under `contributes.commands`. VS Code resolves a
+status bar item's `command` against the extension manifest; an undeclared command leaves the item
+inert. It also never appears in the Command Palette.
+
+The same defect affected `elysiaUsage.togglePrivateMode`, which had been registered in code since
+the private-mode feature shipped.
+
+### Decision
+Every command must be declared in **both** places:
+
+1. `package.json` → `contributes.commands` — declaration (title, category, icon)
+2. `extension.ts` → `vscode.commands.registerCommand()` — implementation
+
+### Consequences
+- **Pros:**
+  - Status bar items become clickable with proper hover feedback
+  - Commands appear in the Command Palette with icon and category
+  - Contributions can be surfaced in `menus`, `keybindings`, and UI without extra wiring
+- **Cons:**
+  - Two places to keep in sync for every new command
+  - Failures are silent — no error is raised for an undeclared command
+
+### Checklist
+When adding a command:
+
+- [ ] Add an entry to `contributes.commands` in `package.json` (command ID, title, category, icon)
+- [ ] Register the handler in `extension.ts`
+- [ ] If assigned to a status bar item, verify it becomes clickable after reload
+- [ ] Verify it appears in the Command Palette (`Ctrl+Shift+P`)
+
+---
+
 ## Rejected Alternatives
 
 ### ❌ TreeView for Model Selector
@@ -197,6 +241,15 @@ Considered building Node.js backend to wrap CLI. Rejected as unnecessary overhea
 - **Service Pattern**: `ElysiaService` encapsulates all CLI logic
 - **Manager Pattern**: `StatusBarManager` handles UI lifecycle
 - **Panel Pattern**: `DetailsPanel` for Webview management
+- **Declared Command Pattern**: every command ID exists in both `package.json` and `extension.ts` (ADR-007)
+
+### CLI Output Parsing
+
+| Command | Format | Parser |
+|---------|--------|--------|
+| `--config` | Line-based key/value | `parseConfigOutput()` — regex per line |
+| `--models` | Line-based list | `parseModelsOutput()` — skip headers, detect `← active` |
+| `--compression-stats --json` | JSON | `parseCompressionStats()` — `JSON.parse`, flatten nested, discard unused keys |
 
 ---
 
@@ -208,7 +261,9 @@ Considered building Node.js backend to wrap CLI. Rejected as unnecessary overhea
 Consider supporting multiple Elysia workspaces simultaneously.
 
 #### ADR-TBD: Usage History Graph
-Consider adding trend charts for usage over time.
+Consider adding trend charts for usage over time. The CLI's `savings_history` array
+(timestamp + cumulative tokens saved) is already returned by `--compression-stats --json`
+but currently unused — it would feed a compression savings trend chart directly.
 
 #### ADR-TBD: Marketplace Distribution
 Consider publishing to VS Code Marketplace vs. manual `.vsix` distribution.

@@ -83,18 +83,55 @@ Dropdown selector in dashboard allowing quick switches between:
 - Kimi models (kimi-k2.5, etc.)
 - Local models (llama, mistral, etc.)
 
+### 📉 Compression Stats
+
+A dedicated **Compression** tab showing detailed metrics from `elysia-code --compression-stats --json`:
+
+**Status & Mode**
+- Service status (enabled/disabled) and port
+- Active compression strategy
+
+**Session Savings**
+- Tokens saved in the current session
+- USD saved and total input cost
+- Requests processed
+
+**Lifetime Savings**
+- Cumulative tokens saved (all time)
+- Cumulative USD saved and total spend
+- Total requests processed
+
+**Top Projects** (collapsible)
+- Top 5 projects by tokens saved, with request counts, savings %, and USD
+
+**Top Models** (collapsible)
+- Top 5 models by compression efficiency
+
+**Recent Requests** (collapsible)
+- Last 5 requests with model, original tokens → optimized tokens, tokens saved, and applied transforms
+
+Click the **Compression** status bar icon to open the dashboard directly on this tab.
+
 ### 🚀 Service Control
 
 One-click restart of the Elysia compression service when experiencing connectivity issues.
 
 ### 📊 Detailed Dashboard
 
-Click status bar to see:
+Two tabs, each with its own focus:
+
+**Usage tab:**
+- Model selector (top) for quick switching
 - Visual progress bar with usage percentage
 - Remaining budget calculation
-- Configuration details (version, model, workspace)
-- LangSmith status
-- Actions panel (Refresh, Restart, Settings, Change Model)
+- Configuration details (version, workspace, config ID, compression state)
+- Private Mode toggle, LangSmith status
+- Actions panel (Refresh, Restart, Settings)
+
+**Compression tab:**
+- Status cards, Session and Lifetime savings
+- Collapsible Top Projects, Top Models, Recent Requests
+- Actions panel (Refresh Stats, Restart)
 
 ---
 
@@ -170,13 +207,24 @@ All settings available via VS Code settings (`Ctrl+,`):
 
 Available via Command Palette (`Ctrl+Shift+P`):
 
-| Command | Description |
-|---------|-------------|
-| `Elysia Companion: Refresh Usage Data` | Force refresh usage information |
-| `Elysia Companion: Show Dashboard` | Open detailed usage dashboard |
-| `Elysia Companion: Restart Service` | Restart compression service |
-| `Elysia Companion: Change Model` | Switch AI model |
-| `Elysia Companion: Open Settings` | Configure extension |
+| Command | ID | Description |
+|---------|-----|-------------|
+| `Elysia Usage: Refresh Usage Data` | `elysiaUsage.refresh` | Force refresh usage information |
+| `Elysia Usage: Show Detailed Usage` | `elysiaUsage.showDetails` | Open dashboard on **Usage** tab |
+| `Elysia Usage: Show Compression Stats` | `elysiaUsage.showCompressionDetails` | Open dashboard on **Compression** tab |
+| `Elysia Usage: Restart Compression` | `elysiaUsage.restartCompression` | Restart compression service |
+| `Elysia Usage: Toggle Private Mode` | `elysiaUsage.togglePrivateMode` | Switch between Private/Standard |
+| `Elysia Usage: Get Models` | `elysiaUsage.getModels` | List available models |
+| `Elysia Usage: Change Model` | `elysiaUsage.changeModel` | Switch AI model |
+| `Elysia Usage: Open Settings` | `elysiaUsage.openSettings` | Configure extension |
+
+### Status Bar Click Actions
+
+| Icon | Click Action |
+|------|--------------|
+| `🟢 $117.45 / 58.7%` | Opens dashboard on **Usage** tab |
+| `🟢 Compression` | Opens dashboard on **Compression** tab |
+| `🔓 Standard` / `🔒 Private` | Toggles private mode |
 
 ---
 
@@ -218,17 +266,40 @@ Available via Command Palette (`Ctrl+Shift+P`):
 elysia-companion/
 ├── src/
 │   ├── extension.ts          # Entry point, command registration
-│   ├── elysiaService.ts      # Core service, cli communication
+│   ├── elysiaService.ts      # Core service, CLI communication, parsing ★
 │   ├── statusBarManager.ts   # Status bar UI management
-│   └── detailsPanel.ts       # Webview dashboard
+│   └── detailsPanel.ts       # Webview dashboard (HTML/JS/CSS)
 ├── out/                      # Compiled JavaScript
+├── releases/                 # Packaged VSIX files
+│   └── elysia-companion-0.2.0.vsix
 ├── architecture/
-│   ├── design.md             # Architecture decisions
+│   ├── design.md             # Architecture decisions (ADRs)
 │   └── spec.md               # Data contracts
+├── tools/
+│   └── build_vscode_extension.py  # Build + package (Python)
+├── build-release.ps1         # Build + package script (PowerShell)
+├── build-release.sh          # Build + package script (Bash)
+├── build-and-package.ps1     # Build + package + install (PowerShell)
+├── build-and-package.cmd     # Build + package + install (Command)
 ├── README.md                 # This file
+├── RELEASE_NOTES.md          # Release notes for latest version
 ├── CHANGELOG.md              # Version history
+├── CLAUDE.md                 # Project map (BLAST Phase 0)
+├── log.md                    # Development log (OKF)
 └── package.json              # Extension manifest
 ```
+
+### Elysia CLI Commands Used
+
+| CLI Command | Used By | Purpose |
+|-------------|---------|---------|
+| `elysia-code --config` | Usage Tracking | Fetch live usage and configuration |
+| `elysia-code --models` | Model Selector | List available models |
+| `elysia-code --model "<name>"` | Model Selector | Switch active model |
+| `elysia-code --private <bool>` | Private Mode | Toggle private/standard mode |
+| `elysia-code --compression-disable` | Restart Service | Stop compression proxy |
+| `elysia-code --compression-enable` | Restart Service | Start compression proxy |
+| `elysia-code --compression-stats --json` | Compression Tab | Fetch detailed compression metrics |
 
 ---
 
@@ -252,8 +323,32 @@ code --extensionDevelopmentPath="."
 ### Package
 
 ```bash
-npm install -g vsce
-vsce package
+# Using npm scripts
+npm run package           # Creates .vsix in root
+npm run package:install   # Creates .vsix and installs it
+
+# Or manually
+npm install -g @vscode/vsce
+npx vsce package --no-dependencies
+```
+
+### Build Scripts
+
+```powershell
+# PowerShell - full build + release prep
+.\build-release.ps1
+
+# PowerShell - build + package + prompt to install
+.\build-and-package.ps1 -Install
+```
+
+```cmd
+build-and-package.cmd install
+```
+
+```bash
+# Python - build + package (+ optional install)
+python tools/build_vscode_extension.py --install
 ```
 
 ---
@@ -282,7 +377,7 @@ MIT - See [LICENSE](LICENSE)
 
 ## Support
 
-For issues and feature requests, please use the [GitHub issue tracker](https://github.com/informa/elysia-companion/issues).
+For issues and feature requests, please use the [GitHub issue tracker](https://github.com/Viottofc-Informa/Elysia-Companion/issues).
 
 ---
 
@@ -307,4 +402,6 @@ When configuring your GitHub repository, add these topics:
 - [Elysia Platform](https://elysia.informa.com/)
 - [Informa Website](https://www.informa.com/)
 - [VS Code Extension API](https://code.visualstudio.com/api)
-- [Report Issues](https://github.com/informa/elysia-companion/issues)
+- [Repository](https://github.com/Viottofc-Informa/Elysia-Companion)
+- [Report Issues](https://github.com/Viottofc-Informa/Elysia-Companion/issues)
+- [Latest Release](https://github.com/Viottofc-Informa/Elysia-Companion/releases)

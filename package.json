@@ -40,6 +40,12 @@
         "icon": "$(graph)"
       },
       {
+        "command": "elysiaUsage.showCompressionDetails",
+        "title": "Show Compression Stats",
+        "category": "Elysia Usage",
+        "icon": "$(dashboard)"
+      },
+      {
         "command": "elysiaUsage.openSettings",
         "title": "Open Settings",
         "category": "Elysia Usage",
@@ -50,6 +56,12 @@
         "title": "Restart Compression",
         "category": "Elysia Usage",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "elysiaUsage.togglePrivateMode",
+        "title": "Toggle Private Mode",
+        "category": "Elysia Usage",
+        "icon": "$(lock)"
       },
       {
         "command": "elysiaUsage.getModels",

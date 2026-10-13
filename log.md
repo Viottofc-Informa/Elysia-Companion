@@ -5,6 +5,54 @@
 
 ---
 
+## 2026-10-13 — Fixed non-clickable status bar items + full documentation audit
+
+### Problem
+The Compression status bar item was not selectable — no hover highlight, no click handler —
+while the Usage item worked normally.
+
+### Root Cause
+`elysiaUsage.showCompressionDetails` was registered at runtime via `vscode.commands.registerCommand`
+and assigned to `compressionStatusItem.command`, but it was **never declared** in
+`package.json` → `contributes.commands`. VS Code validates status bar item commands against the
+manifest; an undeclared command leaves the item non-interactive and absent from the Command Palette.
+
+The same defect affected `elysiaUsage.togglePrivateMode`.
+
+### Solution
+Declared both commands in `package.json` → `contributes.commands` with titles, categories, and icons:
+- `elysiaUsage.showCompressionDetails` — "Show Compression Stats" (`$(dashboard)`)
+- `elysiaUsage.togglePrivateMode` — "Toggle Private Mode" (`$(lock)`)
+
+### Changed
+- **package.json**: Added 2 missing command declarations
+- **README.md**: Commands table (all 8 commands with IDs), new Compression Stats feature section,
+  status bar click actions table, expanded Architecture tree, Elysia CLI command reference,
+  build scripts section, fixed repo links (`informa/elysia-companion` → `Viottofc-Informa/Elysia-Companion`)
+- **CLAUDE.md**: Updated date/status to v0.2.0; added §2.4 CompressionStats schemas,
+  §2.5 Registered Commands, §2.6 Status Bar Items; new ADR-003 documenting this root cause;
+  updated File Structure; added §10 Release Process
+- **architecture/spec.md**: Added full Compression Stats contract (JSON paths → typed model,
+  parsing rules, type definitions, UI presentation table); rewrote Commands, Status Bar, and
+  WebView message contracts; added `initialTab` documentation
+- **SETUP_GUIDE.md**: Version 0.1.0 → 0.2.0; corrected thresholds (75/90 → 45/85);
+  replaced placeholder download link with real GitHub URLs; documented 3 status bar items;
+  added troubleshooting for compression tab and non-clickable items
+- **CHANGELOG.md**: Added Fixed section with the ADR-007 root cause
+- **RELEASE_NOTES.md**: Documented the status bar fix
+- **architecture/index.md**: Updated resource URL and timestamp
+
+### Cleanup
+- **src/extension.ts**: Removed dead command `elysiaUsage.loadCompressionStats` (registered but never invoked —
+  compression stats are fetched through the `loadCompressionStats` WebView message, not the command bus).
+  Removed the now-unused `CompressionStats` import.
+
+### Verification
+✅ `npm run compile` — no errors
+✅ Command consistency: declared (`package.json`) == registered (`extension.ts`) — 8/8 IDs match
+
+---
+
 ## 2026-08-03 — Handle "Used: -" state when monthly usage resets
 
 ### Problem

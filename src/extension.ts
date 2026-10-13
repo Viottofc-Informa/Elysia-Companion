@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ElysiaService, ElysiaConfig, CompressionStats } from './elysiaService';
+import { ElysiaService, ElysiaConfig } from './elysiaService';
 import { StatusBarManager } from './statusBarManager';
 import { DetailsPanel } from './detailsPanel';
 
@@ -75,17 +75,6 @@ export function activate(context: vscode.ExtensionContext) {
         'workbench.action.openSettings',
         'elysiaUsage'
       );
-    }),
-
-    vscode.commands.registerCommand('elysiaUsage.loadCompressionStats', async () => {
-      if (!elysiaService) {
-        throw new Error('Elysia service not initialized');
-      }
-      const stats = await elysiaService.fetchCompressionStats();
-      if (!stats) {
-        throw new Error('Failed to fetch compression stats');
-      }
-      return stats;
     }),
 
     vscode.commands.registerCommand('elysiaUsage.restartCompression', async () => {
