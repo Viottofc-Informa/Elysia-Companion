@@ -239,6 +239,7 @@ Status bar now uses emoji faróis:
 - **Top Projects section** — collapsible table showing projects with most tokens saved
 - **Top Models section** — collapsible table showing models with most compression
 - **Recent Requests section** — collapsible cards showing last 5 requests with details
+- **Compression icon click handler** — Clicking the Compression status bar icon now opens dashboard directly on Compression tab
 - **New interfaces**: `CompressionStats`, `CompressionSession`, `CompressionLifetime`, `ProjectStats`, `ModelStats`, `RecentRequest`
 - **New service method**: `fetchCompressionStats()` — calls `elysia-code --compression-stats --json`
 - **Helper functions**: `formatNumber()`, `formatTime()` for displaying large numbers and timestamps
@@ -255,6 +256,7 @@ Status bar now uses emoji faróis:
 - **Collapsible sections**: Chevron rotation, smooth height transition (max-height technique)
 - **Data tables**: Striped rows, hover highlight, truncated long text
 - **Request cards**: Grid of metrics showing original → optimized → saved
+- **Tab switching**: `initialTab` parameter in `DetailsPanel.show()` for programmatic tab selection
 
 ### Data Pipeline
 ```
@@ -267,6 +269,21 @@ Service.parseCompressionStats(raw)
 DetailsPanel.updateCompressionStats(stats)
   ↓
 WebView displays cards + tables
+```
+
+### Interaction Flow
+```
+User clicks Compression icon in status bar
+  ↓
+Command: elysiaUsage.showCompressionDetails
+  ↓
+DetailsPanel.show(config, extensionUri, service, 'compression')
+  ↓
+WebView receives message: { type: 'init', initialTab: 'compression' }
+  ↓
+JavaScript: switchTab('compression') automatically
+  ↓
+User sees Compression tab active immediately
 ```
 
 ### Verification

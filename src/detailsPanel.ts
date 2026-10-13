@@ -9,7 +9,7 @@ export class DetailsPanel {
   private disposables: vscode.Disposable[] = [];
   private elysiaService: ElysiaService | undefined;
 
-  private constructor(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService) {
+  private constructor(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: 'usage' | 'compression') {
     this.elysiaService = elysiaService;
     this.panel = vscode.window.createWebviewPanel(
       'elysiaUsageDetails',
@@ -23,8 +23,12 @@ export class DetailsPanel {
 
     this.panel.webview.html = this.getWebviewContent(config);
 
-    // Store extension URI for commands
-    this.panel.webview.postMessage({ type: 'init', extensionUri: extensionUri.toString() });
+    // Store extension URI and initial tab for commands
+    this.panel.webview.postMessage({
+      type: 'init',
+      extensionUri: extensionUri.toString(),
+      initialTab: initialTab || 'usage'
+    });
 
     // Handle messages from the webview
     this.panel.webview.onDidReceiveMessage(
@@ -149,12 +153,19 @@ export class DetailsPanel {
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
   }
 
-  public static show(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService): void {
+  public static show(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: 'usage' | 'compression'): void {
     if (DetailsPanel.currentPanel) {
       DetailsPanel.currentPanel.update(config);
       DetailsPanel.currentPanel.panel.reveal();
+      // Switch to specified tab if different from current
+      if (initialTab) {
+        DetailsPanel.currentPanel.panel.webview.postMessage({
+          type: 'switchTab',
+          tab: initialTab
+        });
+      }
     } else {
-      DetailsPanel.currentPanel = new DetailsPanel(config, extensionUri, elysiaService);
+      DetailsPanel.currentPanel = new DetailsPanel(config, extensionUri, elysiaService, initialTab);
     }
   }
 
@@ -1659,6 +1670,18 @@ export class DetailsPanel {
             window.addEventListener('message', function(event) {
                 const message = event.data;
                 switch (message.type) {
+                    case 'init':
+                        // Switch to initial tab if specified
+                        if (message.initialTab) {
+                            window.switchTab(message.initialTab);
+                        }
+                        break;
+                    case 'switchTab':
+                        // Switch to specified tab
+                        if (message.tab) {
+                            window.switchTab(message.tab);
+                        }
+                        break;
                     case 'modelsLoaded':
                         window.displayModels(message.models, message.activeModel);
                         break;

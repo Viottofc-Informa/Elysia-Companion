@@ -38,6 +38,7 @@ export class StatusBarManager {
 
     // Set up click handlers
     this.statusBarItem.command = 'elysiaUsage.showDetails';
+    this.compressionStatusItem.command = 'elysiaUsage.showCompressionDetails';
     this.privateStatusItem.command = 'elysiaUsage.togglePrivateMode';
 
     // Initialize with loading state
