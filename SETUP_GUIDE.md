@@ -8,14 +8,14 @@ tags:
   - configuration
   - elysia
   - vscode
-timestamp: '2026-10-13'
+timestamp: '2026-10-20'
 ---
 
 # Elysia Companion — Setup & Installation Guide
 
 > **One-time setup per workstation** | Support: Informa AI Team
 >
-> **Extension:** elysia-companion | **Version:** 0.2.0 | **License:** MIT
+> **Extension:** elysia-companion | **Version:** 0.2.1 | **License:** MIT
 
 ---
 
@@ -28,7 +28,7 @@ Before installing the extension, ensure:
    ```powershell
    # Verify elysia-code is available
    elysia-code --version
-   # Should output: 0.3.0 or similar
+   # Should output: 0.3.10 or similar
    ```
 
 3. **Elysia CLI location** - Note where `elysia-code` is installed:
@@ -40,11 +40,11 @@ Before installing the extension, ensure:
 ## Download the Extension
 
 1. Download the latest `.vsix` file:
-   - **Direct:** [elysia-companion-0.2.0.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix)
+   - **Direct:** [elysia-companion-0.2.1.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.1.vsix)
    - **Releases page:** [github.com/Viottofc-Informa/Elysia-Companion/releases](https://github.com/Viottofc-Informa/Elysia-Companion/releases)
    - **Or via PowerShell one-liner:**
      ```powershell
-     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.2.0.vsix"
+     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.1.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.2.1.vsix"
      ```
 
 2. Save to your **Downloads** folder or a known location

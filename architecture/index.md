@@ -6,19 +6,19 @@ tags:
   - index
   - navigation
   - documentation
-timestamp: '2026-10-13'
+timestamp: '2026-10-20'
 ---
 
 # Elysia Companion — Documentation Index
 
-> **Version:** 0.2.0 | **Status:** Production Ready
+> **Version:** 0.2.1 | **Status:** Production Ready
 
 ## Quick Links
 
 - [Project Overview](../CLAUDE.md) — North Star, data schema, file structure
 - [User Documentation](../README.md) — Installation, usage, troubleshooting
 - [Setup Guide](../SETUP_GUIDE.md) — Step-by-step installation
-- [Release Notes](../RELEASE_NOTES.md) — Latest version highlights
+- [Release Notes](../RELEASE_NOTES_v0.2.1.md) — v0.2.1: CLI v0.3.10 compatibility
 - [Changelog](../CHANGELOG.md) — Version history
 - [Development Log](../log.md) — Detailed change history
 
@@ -48,4 +48,4 @@ timestamp: '2026-10-13'
 ---
 
 **Maintained by:** Informa AI Team  
-**Last Updated:** 2026-10-13
+**Last Updated:** 2026-10-20

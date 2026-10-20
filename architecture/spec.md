@@ -7,7 +7,7 @@ tags:
   - schema
   - types
   - contract
-timestamp: '2026-10-13'
+timestamp: '2026-10-20'
 ---
 
 # Elysia Companion — Data Contracts
@@ -31,26 +31,31 @@ interface ExtensionConfig {
 
 ## CLI Output Schemas
 
-### Config Output
+### Config Output (v0.3.10+)
 
 Example:
 ```
 Elysia Config
 --------------
-Version    : 0.3.0
-Model      : kimi-k2.5
-Private    : false
-Workspace  : ws-inform-1a0500
-Config ID  : pc-defaul-0c6289
-LangSmith  : enabled
+Version      : 0.3.10
+Model        : kimi-k3
+Context      : 1048576 tokens
+Auto compact : 900000 tokens
+Input / 1M   : $3.30 USD
+Output / 1M  : $16.50 USD
+Pricing      : supplied table, added 19 Oct 2026; rates may change
+Private      : false
+Workspace    : ws-inform-1a0500
+Config ID    : pc-defaul-0c6289
+LangSmith    : enabled
 
 Usage
 --------------
 Status     : Active
-Used       : $117.4554 / $200.00
-            [███████████░░░░░░░░░] 58.7%
+Used       : $64.1131 / $200.00
+            [██████░░░░░░░░░░░░░░] 32.1%
 Resets     : Monthly
-Expires    : 2026-10-11
+Expires    : 2026-12-31
 
 Compression
 --------------
@@ -61,29 +66,46 @@ Log     : C:\Users\...\.elysia\compression.log
 Parsed to:
 ```typescript
 interface ElysiaConfig {
-  version: string;           // "0.3.0"
-  model: string;             // "kimi-k2.5"
+  // Core fields
+  version: string;           // "0.3.10"
+  model: string;             // "kimi-k3"
   isPrivate: boolean;        // false
   workspace: string;           // "ws-inform-1a0500"
   configId: string;          // "pc-defaul-0c6289"
   langSmithEnabled: boolean; // true
   status: string;            // "Active"
-  usedAmount: number;        // 117.4554
+  usedAmount: number;        // 64.1131
   totalAmount: number;       // 200.00
-  percentage: number;        // 58.7
+  percentage: number;          // 32.1
+  isResetState: boolean;       // false
+  // v0.3.10+ fields (optional, backwards compatible)
+  context?: string;          // "1048576 tokens"
+  autoCompact?: string;      // "900000 tokens"
+  inputPrice?: string;       // "$3.30 USD"
+  outputPrice?: string;      // "$16.50 USD"
+  resets?: string;           // "Monthly"
+  expires?: string;          // "2026-12-31"
+  compressionLog?: string;   // "C:\Users\...\.elysia\compression.log"
 }
 ```
 
 Parsing rules:
-- Version: Line starts with "Version", extract after ":"
-- Model: Line starts with "Model", extract after ":"
-- Private: Line starts with "Private", compare to "true"
-- Workspace: Line starts with "Workspace", extract after ":"
-- Config ID: Line starts with "Config ID", extract after ":"
-- LangSmith: Line starts with "LangSmith", check for "enabled"
-- Status: Line starts with "Status", extract after ":"
-- Usage: Line starts with "Used", regex `\$([\d.]+)\s*/\s*\$([\d.]+)`
-- Percentage: Calculated: `(usedAmount / totalAmount) * 100`
+- **Version**: Line starts with "Version", extract after ":"
+- **Model**: Line starts with "Model", extract after ":"
+- **Context** (v0.3.10+): Line starts with "Context", extract after ":"
+- **Auto compact** (v0.3.10+): Line starts with "Auto compact", extract after ":"
+- **Input / 1M** (v0.3.10+): Line starts with "Input / 1M", extract after ":"
+- **Output / 1M** (v0.3.10+): Line starts with "Output / 1M", extract after ":"
+- **Private**: Line starts with "Private", compare to "true"
+- **Workspace**: Line starts with "Workspace", extract after ":"
+- **Config ID**: Line starts with "Config ID", extract after ":"
+- **LangSmith**: Line starts with "LangSmith", check for "enabled"
+- **Status**: Line starts with "Status", extract after ":"
+- **Resets** (v0.3.10+): Line starts with "Resets", extract after ":"
+- **Expires** (v0.3.10+): Line starts with "Expires", extract after ":"
+- **Usage**: Line starts with "Used", regex `\$([\d.]+)\s*/\s*\$([\d.]+)`, or "-" for reset state
+- **Log** (v0.3.10+): Line starts with "Log", extract after ":", must contain ".log"
+- **Percentage**: Calculated: `(usedAmount / totalAmount) * 100`, or 0 if reset state
 
 ---
 

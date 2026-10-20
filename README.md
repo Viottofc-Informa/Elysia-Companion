@@ -14,19 +14,19 @@ tags:
   - productivity
   - developer-tools
   - informa-connect
-timestamp: '2026-10-09'
+timestamp: '2026-10-20'
 ---
 
 # Elysia Companion
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://code.visualstudio.com/)
 [![Informa](https://img.shields.io/badge/Informa-Design%20System-indigo.svg)](https://www.informa.com/)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](CHANGELOG.md)
-[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.2.0.vsix)
+[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](CHANGELOG.md)
+[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.2.1.vsix)
 
 A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
 
-> **Latest Release:** v0.2.0 — [Download VSIX](releases/elysia-companion-0.2.0.vsix) | New: Compression Stats tab with detailed metrics!
+> **Latest Release:** v0.2.1 — [Download VSIX](releases/elysia-companion-0.2.1.vsix) | New: CLI v0.3.10 support with Model Information (context, pricing, quota expiry)!
 
 ---
 
