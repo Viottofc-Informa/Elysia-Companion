@@ -2,7 +2,7 @@
   "name": "elysia-companion",
   "displayName": "Elysia Companion",
   "description": "Elysia Companion - Usage tracking, model management, and service control for VS Code",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "fernando.viotto@informa.com",
   "license": "MIT",
   "engines": {

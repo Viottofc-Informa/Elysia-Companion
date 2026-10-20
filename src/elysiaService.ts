@@ -17,6 +17,14 @@ export interface ElysiaConfig {
   percentage: number;
   /** True when the CLI reports "Used: -" — the monthly usage counter has just reset */
   isResetState: boolean;
+  // New fields from v0.3.10+ config output
+  context?: string;           // Context window size (e.g., "1048576 tokens")
+  autoCompact?: string;       // Auto-compaction threshold (e.g., "900000 tokens")
+  inputPrice?: string;        // Input price per 1M tokens (e.g., "$3.30 USD")
+  outputPrice?: string;       // Output price per 1M tokens (e.g., "$16.50 USD")
+  resets?: string;           // Reset frequency (e.g., "Monthly")
+  expires?: string;           // Quota expiry date (e.g., "2026-12-31")
+  compressionLog?: string;    // Path to compression log file
 }
 
 // Compression stats interfaces
@@ -253,6 +261,30 @@ export class ElysiaService {
           if (match) config.model = match[1].trim();
         }
 
+        // Parse Context (e.g., "Context      : 1048576 tokens")
+        else if (trimmed.startsWith('Context')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.context = match[1].trim();
+        }
+
+        // Parse Auto Compact (e.g., "Auto compact : 900000 tokens")
+        else if (trimmed.startsWith('Auto compact')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.autoCompact = match[1].trim();
+        }
+
+        // Parse Input / 1M (e.g., "Input / 1M   : $3.30 USD")
+        else if (trimmed.startsWith('Input / 1M')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.inputPrice = match[1].trim();
+        }
+
+        // Parse Output / 1M (e.g., "Output / 1M  : $16.50 USD")
+        else if (trimmed.startsWith('Output / 1M')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.outputPrice = match[1].trim();
+        }
+
         // Parse Private
         else if (trimmed.startsWith('Private')) {
           const match = trimmed.match(/:\s*(.+)/);
@@ -283,6 +315,18 @@ export class ElysiaService {
           if (match) config.status = match[1].trim();
         }
 
+        // Parse Resets (e.g., "Resets     : Monthly")
+        else if (trimmed.startsWith('Resets')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.resets = match[1].trim();
+        }
+
+        // Parse Expires (e.g., "Expires    : 2026-12-31")
+        else if (trimmed.startsWith('Expires')) {
+          const match = trimmed.match(/:\s*(.+)/);
+          if (match) config.expires = match[1].trim();
+        }
+
         // Parse Usage - normal format:  "Used       : $115.8067 / $200.00"
         //               reset format:   "Used       : -"
         else if (trimmed.startsWith('Used')) {
@@ -296,6 +340,13 @@ export class ElysiaService {
             config.totalAmount = 0;
             config.isResetState = true;
           }
+        }
+
+        // Parse Log (Compression log path, e.g., "Log     : C:\Users\...\compression.log")
+        // Note: Must check after Status to avoid conflicts, and verify it looks like a path
+        else if (trimmed.startsWith('Log')) {
+          const match = trimmed.match(/:\s*(.+\.log.*)/);
+          if (match) config.compressionLog = match[1].trim();
         }
       }
 

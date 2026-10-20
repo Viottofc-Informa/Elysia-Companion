@@ -1,8 +1,8 @@
 # Elysia Companion — Project Map
 
 > **Project Type:** VS Code Extension  
-> **Status:** ✅ Production Ready (v0.2.0)  
-> **Last Updated:** 2026-10-13  
+> **Status:** ✅ Production Ready (v0.2.1)  
+> **Last Updated:** 2026-10-20  
 > **BLAST Phase:** 5 (Trigger - Deployed)  
 > **Repository:** https://github.com/Viottofc-Informa/Elysia-Companion
 
@@ -59,16 +59,25 @@ Enable Elysia users to monitor usage, manage models, control services, and analy
 
 ```typescript
 interface ElysiaConfig {
-  version: string;           // "0.3.0"
-  model: string;             // "kimi-k2.5"
+  version: string;           // "0.3.10"
+  model: string;             // "kimi-k3"
   isPrivate: boolean;        // false
-  workspace: string;           // "ws-inform-1a0500"
+  workspace: string;         // "ws-inform-1a0500"
   configId: string;          // "pc-defaul-0c6289"
   langSmithEnabled: boolean; // true
   status: string;            // "Active"
-  usedAmount: number;        // 117.45
-  totalAmount: number;       // 200.00
-  percentage: number;        // 58.72
+  usedAmount: number;        // 64.1131
+  totalAmount: number;         // 200.00
+  percentage: number;          // 32.1
+  isResetState: boolean;       // false
+  // v0.3.10+ fields
+  context?: string;          // "1048576 tokens"
+  autoCompact?: string;      // "900000 tokens"
+  inputPrice?: string;       // "$3.30 USD"
+  outputPrice?: string;      // "$16.50 USD"
+  resets?: string;           // "Monthly"
+  expires?: string;          // "2026-12-31"
+  compressionLog?: string;   // "C:\Users\...\compression.log"
 }
 ```
 

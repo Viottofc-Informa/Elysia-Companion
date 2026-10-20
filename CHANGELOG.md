@@ -2,6 +2,28 @@
 
 All notable changes to the "Elysia Companion" extension will be documented in this file.
 
+## [0.2.1] - 2026-10-20
+
+### Added
+- **CLI v0.3.10 Compatibility**: Full support for new `--config` output fields
+- **Model Information Card**: New section in Usage tab displaying:
+  - Context Window (e.g., "1048576 tokens")
+  - Auto-Compact threshold (e.g., "900000 tokens")
+  - Input/Output pricing per 1M tokens (e.g., "$3.30 USD / $16.50 USD")
+- **Quota Information**: Reset frequency and expiry date in Configuration section
+- **Compression Log Path**: New card displaying log file location when available
+
+### Changed
+- **Model Information position**: Moved below Usage Summary for better logical flow
+- **Interface updates**: `ElysiaConfig` now includes 7 optional new fields (backwards compatible)
+
+### Technical
+- Extended `ElysiaConfig` interface with optional fields: `context`, `autoCompact`, `inputPrice`, `outputPrice`, `resets`, `expires`, `compressionLog`
+- Added parsing logic in `parseConfigOutput()` for all new CLI fields
+- Updated `detailsPanel.ts` with conditional display of new Model Information section
+
+---
+
 ## [0.2.0] - 2026-10-09
 
 ### Added

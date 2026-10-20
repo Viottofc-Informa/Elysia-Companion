@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-10-20 — Added new CLI v0.3.10 config fields
+
+### Context
+Elysia CLI v0.3.10 introduced new fields in `--config` output that were not being captured or displayed.
+
+### New Fields Captured
+- **Model Info**: `context` (1048576 tokens), `autoCompact` (900000 tokens), `inputPrice` ($3.30 USD), `outputPrice` ($16.50 USD)
+- **Usage Info**: `resets` (Monthly), `expires` (2026-12-31)
+- **Compression Info**: `compressionLog` (path to log file)
+
+### Changed
+- **src/elysiaService.ts**: Extended `ElysiaConfig` interface (lines 19-27), added parsing logic for 7 new fields following existing regex pattern
+- **src/detailsPanel.ts**: Added conditional display sections — Model Information card, Quota information, Compression Log path — all gracefully degrade if data unavailable
+
+### Backwards Compatibility
+All new fields are optional (`?`) in the interface; extension works with older CLI versions that don't output these fields.
+
+---
+
 ## 2026-10-13 — Fixed non-clickable status bar items + full documentation audit
 
 ### Problem

@@ -1126,6 +1126,39 @@ export class DetailsPanel {
                 </div>
             </div>
 
+            <!-- Model Information (v0.3.10+) -->
+            ${config.context || config.autoCompact || config.inputPrice || config.outputPrice ? `
+            <div class="card">
+                <div class="section-title">🤖 Model Information</div>
+                <div class="info-grid">
+                    ${config.context ? `
+                    <div class="info-item">
+                        <div class="info-label">Context Window</div>
+                        <div class="info-value">${config.context}</div>
+                    </div>
+                    ` : ''}
+                    ${config.autoCompact ? `
+                    <div class="info-item">
+                        <div class="info-label">Auto-Compact</div>
+                        <div class="info-value">${config.autoCompact}</div>
+                    </div>
+                    ` : ''}
+                    ${config.inputPrice ? `
+                    <div class="info-item">
+                        <div class="info-label">Input / 1M tokens</div>
+                        <div class="info-value">${config.inputPrice}</div>
+                    </div>
+                    ` : ''}
+                    ${config.outputPrice ? `
+                    <div class="info-item">
+                        <div class="info-label">Output / 1M tokens</div>
+                        <div class="info-value">${config.outputPrice}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+
             <!-- Configuration -->
             <div class="card">
                 <div class="section-title">⚙️ Configuration</div>
@@ -1151,6 +1184,10 @@ export class DetailsPanel {
 
                 <div style="margin-top: 16px;">
                     <div class="metric-row">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value">${config.status}</span>
+                    </div>
+                    <div class="metric-row">
                         <span class="metric-label">Private Mode</span>
                         <button class="btn ${config.isPrivate ? 'btn-warning' : 'btn-success'} btn-toggle" onclick="togglePrivateMode()">
                             ${config.isPrivate ? '🔒 Private' : '🔓 Standard'}
@@ -1162,12 +1199,30 @@ export class DetailsPanel {
                             ${config.langSmithEnabled ? '✓ Enabled' : '✗ Disabled'}
                         </span>
                     </div>
+                    ${config.resets ? `
                     <div class="metric-row">
-                        <span class="metric-label">Status</span>
-                        <span class="metric-value">${config.status}</span>
+                        <span class="metric-label">Reset Frequency</span>
+                        <span class="metric-value">${config.resets}</span>
                     </div>
+                    ` : ''}
+                    ${config.expires ? `
+                    <div class="metric-row">
+                        <span class="metric-label">Quota Expires</span>
+                        <span class="metric-value">${config.expires}</span>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
+
+            <!-- Compression Log (v0.3.10+) -->
+            ${config.compressionLog ? `
+            <div class="card">
+                <div class="section-title">📄 Compression Log</div>
+                <div style="background: var(--vscode-input-bg); padding: 12px; border-radius: 4px; font-family: monospace; font-size: 12px; word-break: break-all; color: var(--vscode-desc-fg);">
+                    ${config.compressionLog}
+                </div>
+            </div>
+            ` : ''}
 
             <!-- Action Buttons (at bottom of Usage tab) -->
             <div class="card">
