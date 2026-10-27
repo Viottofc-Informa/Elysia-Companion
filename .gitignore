@@ -25,3 +25,6 @@ Thumbs.db
 
 # Optional: don't commit compiled files
 # out/
+
+# Backup of failed v0.3.0 attempt — local only
+backup_v0.3.0_attempt/

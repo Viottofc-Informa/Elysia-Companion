@@ -7,7 +7,8 @@ tags:
   - design
   - adr
   - decisions
-timestamp: '2026-10-13'
+generated: { by: "human:viottof", at: '2026-10-13T00:00:00Z' }
+status: stable
 ---
 
 # Elysia Companion — Architecture Design

@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-10-22 — Repository cleanup: reset from v0.3.0 attempt to stable v0.2.1
+
+### Problem
+Local repository had diverged from remote with:
+- Version mismatch: package.json at 0.3.0, but remote was 0.2.1
+- Corrupted files: `detailsPanel.ts.corrupted`, debug plan markdown
+- Uncommitted changes in log.md and elysiaService.ts
+- Local commits ahead of remote (v0.3.0 attempt that failed)
+
+### Solution
+Performed clean reset to stable v0.2.1:
+1. Created backup at `backup_v0.3.0_attempt/` with corrupted files and local modifications
+2. Discarded local changes: `git checkout -- log.md src/elysiaService.ts`
+3. Removed corrupted files: `detailsPanel.ts.corrupted`, `elysia-companion-v0.3.0-debug-plan.md`
+4. Reset to v0.2.1 tag: `git reset --hard v0.2.1`
+5. Synced with remote: `git pull origin main`
+
+### Result
+- Repository now at stable v0.2.1 (78a34ef)
+- Clean working tree, synchronized with origin/main
+- Backup preserved for reference if needed
+
+---
+
 ## 2026-10-20 — Added new CLI v0.3.10 config fields
 
 ### Context

@@ -7,7 +7,8 @@ tags:
   - schema
   - types
   - contract
-timestamp: '2026-10-20'
+generated: { by: "human:viottof", at: '2026-10-20T00:00:00Z' }
+status: stable
 ---
 
 # Elysia Companion — Data Contracts
