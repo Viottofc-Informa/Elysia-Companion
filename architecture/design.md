@@ -260,6 +260,68 @@ does not — and need not — kill the Claude Code process directly.
 
 ---
 
+## ADR-009: Model metadata is a curated catalog in the extension, not read from the CLI
+
+### Status
+✅ Accepted (2026-11-23)
+
+### Context
+
+The Usage tab's model dropdown listed bare model IDs — `kimi-k3`, `gpt-5-4` — giving
+a user no way to judge cost or capability without leaving VS Code for
+`pilots.ai.informa.com/elysia-code/`.
+
+Surfacing that information required knowing where it could come from. Investigation
+of `elysia-code.py` 0.3.12 showed:
+
+| Data | In CLI model? | Exposed for all models? |
+|------|---------------|-------------------------|
+| Model IDs (`ALLOWED_MODELS`) | ✅ | ✅ via `--models` |
+| Context / auto-compact (`MODEL_CONTEXT_LIMITS`) | ✅ | ❌ active model only, via `--config` |
+| Pricing (`MODEL_COSTS`) | ✅ | ❌ active model only, via `--config` |
+| "Best for" description | ❌ | ❌ not in the CLI at all |
+
+No CLI flag returns the full table. The descriptions exist only as site curation.
+
+### Decision
+
+Curate per-model metadata in a new `src/modelCatalog.ts`, and keep `--models` as the
+source of the model *list*. The catalog is pre-rendered into the webview as a
+serialisable view model.
+
+Three alternatives were considered and rejected (see below): reading the CLI's Python
+constants at runtime, adding a `--models --json` flag upstream, and adding that flag
+now with a catalog as an interim measure.
+
+### Consequences
+
+- ✅ Metadata available offline; no coupling to the CLI's internal file layout
+- ✅ Model list stays live — a model added to the gateway still appears and is selectable
+- ✅ Formatting lives in one place (TypeScript), not duplicated in webview JS
+- ⚠️ Catalog can drift from the gateway; requires manual review when models change
+- ⚠️ Pricing shown is the site's table, not a live billing rate
+- 📌 Mitigations: models absent from the catalog degrade to name-only rather than
+  breaking; the dropdown footer states the source URL and verification date so the
+  data is not mistaken for live output; `spec.md` records the transcription
+
+### Rejected alternatives
+
+**Read `elysia-code.py` constants at runtime** — would stay in sync automatically, but
+couples the extension to another tool's private internals. A rename of
+`MODEL_COSTS` would break the selector, and the "Best for" text would still need
+curation, so the sync would be partial at best.
+
+**Add `--models --json` to the CLI first** — the durable fix, and the CLI already has a
+precedent (`--compression-stats --json`). Rejected as the *immediate* path because it
+blocks this redesign on an upstream release. The catalog view model is shaped so the
+source can be swapped for CLI JSON later without touching the UI or the types.
+
+**Add the flag now, catalog as interim** — rejected as speculative architecture. Adds
+an indirection layer today for a CLI change that may or may not be prioritised; the
+swap is a one-function change whenever it does land.
+
+---
+
 ## Rejected Alternatives
 
 ### ❌ TreeView for Model Selector

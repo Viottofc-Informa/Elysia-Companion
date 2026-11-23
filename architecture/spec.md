@@ -149,6 +149,101 @@ Parsing rules:
    - Else if not "OK":
      - First word before whitespace is model name
 
+**Important:** `--models` returns **names only**. It carries no context window,
+pricing, or description — measured against CLI 0.3.12, where the metadata lives in
+`MODEL_CONTEXT_LIMITS` / `MODEL_COSTS` but is printed only for the active model via
+`--config`. Per-model metadata therefore comes from the catalog below.
+
+---
+
+### Model Metadata Catalog (v0.3.2, `src/modelCatalog.ts`)
+
+Source: curated from https://pilots.ai.informa.com/elysia-code/ (pricing table dated
+19 Oct 2026), verified 2026-11-23. Not live gateway output — the dropdown footer
+states the source and verification date for exactly this reason.
+
+```typescript
+interface PriceTier {
+  short: number;       // USD per 1M tokens, prompt <= threshold
+  long: number;        // USD per 1M tokens, prompt > threshold
+  threshold: number;   // token count where `long` applies; 0 = no tiering
+}
+
+interface ModelMeta {
+  label: string;        // "Kimi K3"
+  bestFor: string;      // site "Best for" text; rendered in the tooltip only
+  context: number;      // tokens
+  autoCompact: number;  // tokens
+  input: PriceTier;
+  output: PriceTier;
+}
+```
+
+Catalog values (13 models, CLI 0.3.12):
+
+| ID | Context | Auto-compact | Input | Output |
+|----|---------|--------------|-------|--------|
+| `kimi-k2.7-code` | 262,144 | 220,000 | $0.95 | $4.00 |
+| `kimi-k3` | 1,048,576 | 900,000 | $3.30 | $16.50 |
+| `zai.glm-5.3` | 1,048,576 | 900,000 | $1.40 | $4.40 |
+| `gpt-5.6-luna` | 1,050,000 | 900,000 | $0.40 | $1.80 |
+| `gpt-5.3-codex` | 400,000 | 340,000 | $1.75 | $14.00 |
+| `gpt-5-4` | 1,050,000 | 900,000 | $2.50 | $15.00 |
+| `gpt-5-4-mini` | 400,000 | 340,000 | $0.75 | $4.50 |
+| `claude-sonnet-5-5` | 1,000,000 | 850,000 | $2.20 | $11.00 |
+| `claude-haiku-5-5` | 1,000,000 | 850,000 | $0.11 / $0.55 | $0.55 / $2.75 |
+| `deepseek-v4` | 1,048,576 | 900,000 | $1.74 | $3.48 |
+| `deepseek-v4.1-flash` | 1,048,576 | 900,000 | $0.37 | $1.50 |
+| `minimax-m2.5` | 196,608 | 170,000 | $0.30 | $1.20 |
+| `gpt-6.1-sol` | 272,000 | 230,000 | $2.00 | $10.00 |
+
+`claude-haiku-5-5` is the only tiered entry (`threshold: 100000`): its rate depends
+on prompt length. The list shows the short-prompt rate with an `up to 100K` note; the
+tooltip shows both ranges.
+
+**Fallback contract:** a model returned by `--models` but absent from the catalog
+**still renders and remains selectable** — it simply has no second line and no `ⓘ`
+button. Metadata is never fabricated; absent data renders as absent.
+
+Webview view model (pre-rendered, because model rows are built in browser JS which
+cannot call the TypeScript formatters):
+
+```typescript
+interface ModelMetaView {
+  label: string;
+  line2: string;            // "262K ctx · $0.95 in / $4.00 out"
+  bestFor: string;
+  contextText: string;      // "1,048,576 tokens"
+  autoCompactText: string;  // "900,000 tokens"
+  inputLines: string[];     // flat: 1 entry; tiered: 2 entries
+  outputLines: string[];
+}
+```
+
+Webview invariants (all three are enforced, not incidental):
+- **Catalog lookup must be an own-property check.** Plain bracket access reaches
+  `Object.prototype`, so a gateway model named `toString` or `constructor` would look
+  like it had metadata and render a literal `"undefined"`. The webview uses
+  `Object.prototype.hasOwnProperty.call`, mirroring `getModelMeta`.
+- **Inline handlers receive the row index, never the model ID.** HTML character
+  references are decoded before an attribute value is compiled as JS, so an ID
+  containing `'` would break out of the string literal. Indices are plain digits.
+- **Inline handlers must not reference an IIFE-scoped variable.** A browser compiles
+  an inline attribute handler with the GLOBAL object as its scope chain, so anything
+  declared with `let`/`const` inside the webview IIFE is invisible to it. Referencing
+  `availableModels` directly in an `onclick` throws `ReferenceError` and kills the row
+  silently — the row looks clickable but does nothing. The handler therefore calls
+  `selectModelByIndex(<n>)`, a `window`-level function that closes over
+  `availableModels` and resolves the ID internally.
+
+Formatting rules:
+- `formatContext` **floors** at 1M and 1K boundaries — context is a capacity, so
+  rounding up would overstate it. `196608` → `"196K"`, not `"197K"`. All values at or
+  above 1M collapse to `"1M"`, normalising 1,048,576 / 1,050,000 / 1,000,000.
+- `formatUsd` always renders two decimals, matching the site's table.
+- The view model is serialised JSON into the webview with `</` escaped as `<\/` so it
+  cannot terminate the enclosing `<script>` block.
+
 ---
 
 ### Model Change Output

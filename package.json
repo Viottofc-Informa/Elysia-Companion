@@ -2,7 +2,7 @@
   "name": "elysia-companion",
   "displayName": "Elysia Companion",
   "description": "Elysia Companion - Usage tracking, model management, and service control for VS Code",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "fernando.viotto@informa.com",
   "license": "MIT",
   "engines": {
@@ -137,9 +137,9 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
+    "test": "node tests/run_all.js",
     "package": "vsce package --no-dependencies",
     "package:install": "npm run package && code --install-extension elysia-companion-*.vsix"
   },

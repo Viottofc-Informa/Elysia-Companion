@@ -3,6 +3,7 @@ import { ElysiaConfig, CompressionStats, RecentRequest } from './elysiaService';
 
 import { ElysiaService } from './elysiaService';
 import { SettingsService, PluginState } from './settingsService';
+import { buildCatalogView } from './modelCatalog';
 
 type TabName = 'usage' | 'compression' | 'plugins';
 
@@ -240,6 +241,12 @@ export class DetailsPanel {
       statusText = 'Warning';
       statusClass = 'warning';
     }
+
+    // Per-model metadata, pre-rendered for the webview. Serialised into the HTML
+    // because the model rows are built in client-side JS, which cannot call the
+    // TypeScript formatters. Text is embedded as JSON, so escape `</` to keep it
+    // from terminating the surrounding <script> block early.
+    const catalogJson = JSON.stringify(buildCatalogView()).replace(/<\//g, '<\\/');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -668,7 +675,9 @@ export class DetailsPanel {
             background: var(--vscode-dropdown-bg);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 6px;
-            max-height: 300px;
+            /* Two-line rows need more room than the previous single-line list:
+               ~62px per model, so this shows roughly 8 of 13 before scrolling. */
+            max-height: min(60vh, 520px);
             overflow-y: auto;
             z-index: 100;
             opacity: 0;
@@ -685,9 +694,10 @@ export class DetailsPanel {
 
         .model-item {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 3px;
+            padding: 10px 16px;
             cursor: pointer;
             transition: background-color 0.15s ease;
             border-bottom: 1px solid var(--vscode-panel-border);
@@ -705,9 +715,25 @@ export class DetailsPanel {
             background: var(--vscode-list-active);
         }
 
+        /* Row line 1: model name on the left, badge and ⓘ on the right. */
+        .model-item-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
         .model-item-name {
             font-size: 14px;
             font-weight: 500;
+        }
+
+        /* Row line 2: context + pricing. tabular-nums keeps the prices in a
+           vertical column across rows, which is what makes the list scannable. */
+        .model-item-meta {
+            font-size: 11px;
+            color: var(--vscode-desc-fg);
+            font-variant-numeric: tabular-nums;
         }
 
         .model-item-badge {
@@ -717,6 +743,90 @@ export class DetailsPanel {
             background: var(--color-success);
             color: var(--color-success-text);
             font-weight: 600;
+            margin-left: auto;
+        }
+
+        .model-info-btn {
+            background: none;
+            border: none;
+            color: var(--vscode-desc-fg);
+            cursor: help;
+            font-size: 13px;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .model-info-btn:hover,
+        .model-info-btn:focus-visible {
+            color: var(--vscode-fg);
+            outline: 1px solid var(--vscode-focus-border, var(--vscode-desc-fg));
+        }
+
+        /* Tooltip is position:fixed and lives on <body>, not inside the dropdown:
+           .model-dropdown has overflow-y:auto and would clip it at every edge.
+           Position is computed in JS from the ⓘ anchor, flipping above when there
+           is not enough room below. */
+        .model-tooltip {
+            position: fixed;
+            z-index: 1000;
+            /* Never wider than the panel: a VS Code sidebar can be ~300px, and a
+               fixed 320px tooltip would be clipped with no way to scroll to it. */
+            max-width: min(320px, calc(100vw - 16px));
+            padding: 12px 14px;
+            background: var(--vscode-panel-bg);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            font-size: 12px;
+            color: var(--vscode-fg);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.12s ease;
+        }
+
+        .model-tooltip.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .model-tooltip-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .model-tooltip-desc {
+            color: var(--vscode-desc-fg);
+            line-height: 1.45;
+            margin-bottom: 10px;
+        }
+
+        .model-tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 2px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .model-tooltip-row span:first-child {
+            color: var(--vscode-desc-fg);
+        }
+
+        /* Provenance line — the metadata is curated and dated, not live gateway
+           output, and should not read as more authoritative than it is.
+           Sticky so it stays visible: with 13 rows in a scrollable dropdown it
+           would otherwise sit below the fold and never be read. */
+        .model-footer {
+            position: sticky;
+            bottom: 0;
+            padding: 8px 16px;
+            font-size: 10px;
+            color: var(--vscode-desc-fg);
+            background: var(--vscode-dropdown-bg);
+            border-top: 1px solid var(--vscode-panel-border);
+            text-align: center;
         }
 
         .model-loading {
@@ -1282,6 +1392,9 @@ export class DetailsPanel {
                         <span>Loading models...</span>
                     </div>
                     <div id="modelList" style="display: none;"></div>
+                    <div class="model-footer" id="modelFooter" style="display: none;">
+                        Details from pilots.ai.informa.com/elysia-code/ · verified 2026-11-23
+                    </div>
                 </div>
             </div>
 
@@ -1609,6 +1722,10 @@ export class DetailsPanel {
     <script>
         (function() {
             const vscode = acquireVsCodeApi();
+
+            // Per-model metadata, pre-rendered by the extension (see modelCatalog.ts).
+            // A model missing from this map still renders — just without line 2 or ⓘ.
+            const MODEL_CATALOG = ${catalogJson};
 
             // State
             let availableModels = [];
@@ -1949,17 +2066,162 @@ export class DetailsPanel {
                 if (models.length === 0) {
                     list.innerHTML = '<div class="model-error">Failed to load models</div>';
                 } else {
-                    list.innerHTML = models.map(function(model) {
+                    list.innerHTML = models.map(function(model, index) {
                         const isActive = model === activeModel;
-                        return '<div class="model-item ' + (isActive ? 'selected' : '') + '" onclick="selectModel(\\'' + model + '\\')">' +
-                            '<span class="model-item-name">' + model + '</span>' +
+                        const meta = lookupMeta(model);
+                        const id = escapeHtml(model);
+                        // Handlers receive the row INDEX, not the model ID. An index is
+                        // pure digits, so nothing user- or gateway-supplied is ever
+                        // interpolated into a JS string literal inside an attribute —
+                        // ids containing ' or \ would otherwise break out of the
+                        // quoting. The id is resolved at call time from availableModels.
+                        //
+                        // Second line and ⓘ appear only when metadata exists. A model
+                        // missing from the catalog still renders and stays selectable.
+                        const infoBtn = meta
+                            ? '<button class="model-info-btn" type="button"' +
+                              ' aria-label="Details for ' + escapeHtml(meta.label) + '"' +
+                              ' onmouseenter="showModelTip(this, ' + index + ')"' +
+                              ' onmouseleave="hideModelTip()"' +
+                              ' onfocus="showModelTip(this, ' + index + ')"' +
+                              ' onblur="hideModelTip()"' +
+                              ' onclick="event.stopPropagation()">&#9432;</button>'
+                            : '';
+                        const metaLine = meta
+                            ? '<div class="model-item-meta">' + escapeHtml(meta.line2) + '</div>'
+                            : '';
+                        return '<div class="model-item ' + (isActive ? 'selected' : '') + '" onclick="selectModelByIndex(' + index + ')">' +
+                            '<div class="model-item-head">' +
+                            '<span class="model-item-name">' + id + '</span>' +
                             (isActive ? '<span class="model-item-badge">active</span>' : '') +
+                            infoBtn +
+                            '</div>' +
+                            metaLine +
                             '</div>';
                     }).join('');
                 }
 
                 loading.style.display = 'none';
                 list.style.display = 'block';
+                // Only cite the metadata source when there is metadata on screen —
+                // not under a "Failed to load models" message.
+                document.getElementById('modelFooter').style.display =
+                    models.length > 0 ? 'block' : 'none';
+            };
+
+            // ===== Model detail tooltip =====
+            // position:fixed on <body> so the dropdown's overflow-y:auto cannot clip
+            // it. Anchored to the ⓘ button and flipped above when there is no room
+            // below, clamped so it never leaves the viewport.
+            //
+            // Looked up lazily: this script block precedes the tooltip element in the
+            // document, so a getElementById at load time would return null.
+            function getTooltip() {
+                return document.getElementById('modelTooltip');
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            // Own-property lookup. Plain bracket access would reach Object.prototype,
+            // so a gateway model named "toString" or "constructor" would look like it
+            // had metadata — rendering a literal "undefined" second line and throwing
+            // in buildTipHtml — instead of degrading to name-only as documented.
+            function lookupMeta(modelId) {
+                return Object.prototype.hasOwnProperty.call(MODEL_CATALOG, modelId)
+                    ? MODEL_CATALOG[modelId]
+                    : undefined;
+            }
+
+            function tooltipRow(label, value) {
+                return '<div class="model-tooltip-row"><span>' + escapeHtml(label) +
+                       '</span><span>' + escapeHtml(value) + '</span></div>';
+            }
+
+            function buildTipHtml(meta) {
+                // Tiered models (haiku) render both ranges — the list's fixed-width
+                // second line cannot, which is exactly why the tooltip exists.
+                const rows = [
+                    '<div class="model-tooltip-title">' + escapeHtml(meta.label) + '</div>',
+                    '<div class="model-tooltip-desc">' + escapeHtml(meta.bestFor) + '</div>',
+                    tooltipRow('Context', meta.contextText),
+                    tooltipRow('Auto-compact', meta.autoCompactText)
+                ];
+                meta.inputLines.forEach(function(line, i) {
+                    rows.push(tooltipRow(i === 0 ? 'Input' : '', line));
+                });
+                meta.outputLines.forEach(function(line, i) {
+                    rows.push(tooltipRow(i === 0 ? 'Output' : '', line));
+                });
+                return rows.join('');
+            }
+
+            window.showModelTip = function(anchorEl, index) {
+                const modelId = availableModels[index];
+                const meta = lookupMeta(modelId);
+                const tooltip = getTooltip();
+                if (!meta || !tooltip) return;
+
+                tooltip.innerHTML = buildTipHtml(meta);
+                tooltip.classList.add('open');
+
+                // Measure after the content is in place — the tooltip sizes to its text.
+                const anchor = anchorEl.getBoundingClientRect();
+                const tipHeight = tooltip.offsetHeight;
+                const tipWidth = tooltip.offsetWidth;
+
+                // Clamp top so the tooltip always stays fully on screen, whichever side it
+                // lands on. Done before the flip decision so both branches are bounded.
+                const maxTop = Math.max(8, window.innerHeight - tipHeight - 8);
+                const spaceBelow = window.innerHeight - anchor.bottom;
+                const fitsBelow = spaceBelow > tipHeight + 12;
+
+                // Prefer below the anchor; otherwise above. If neither fits, the
+                // clamp pins it inside the viewport rather than letting it overflow
+                // — and may cover the anchor, so hide on hover-out still applies.
+                const desiredTop = fitsBelow
+                    ? anchor.bottom + 8
+                    : anchor.top - tipHeight - 8;
+                tooltip.style.top = Math.max(8, Math.min(desiredTop, maxTop)) + 'px';
+
+                // Right-align to the anchor, then clamp. The upper bound can go
+                // negative in a panel narrower than the tooltip (VS Code sidebars
+                // are ~300px), so clamp low-to-high instead of Math.min over a
+                // possibly-negative bound, which would push it off the left edge.
+                const rightAligned = anchor.right - tipWidth;
+                const maxLeft = Math.max(8, window.innerWidth - tipWidth - 8);
+                tooltip.style.left = Math.max(8, Math.min(rightAligned, maxLeft)) + 'px';
+            };
+
+            window.hideModelTip = function() {
+                const tooltip = getTooltip();
+                if (tooltip) {
+                    tooltip.classList.remove('open');
+                }
+            };
+
+            // Close on scroll: the tooltip is anchored to a captured position and
+            // would otherwise stay put while the row it describes scrolls away.
+            // Capture phase catches the dropdown's own scroll, not just the window's.
+            document.addEventListener('scroll', window.hideModelTip, true);
+
+            // Row-click entry point. Inline attribute handlers are compiled in GLOBAL
+            // scope, so they cannot see 'availableModels' (declared with 'let' inside
+            // this IIFE). Passing the id as a literal would work but reopens the
+            // quoting hole the index approach closed. So the handler passes only the
+            // row index, and this function — which does close over 'availableModels'
+            // — turns it into a model id.
+            window.selectModelByIndex = function(index) {
+                const model = availableModels[index];
+                if (typeof model === 'string') {
+                    window.selectModel(model);
+                }
             };
 
             // Select a model
@@ -2065,6 +2327,10 @@ export class DetailsPanel {
             }, 500);
         })();
     </script>
+
+    <!-- Reused detail tooltip. Lives on <body> rather than inside the dropdown so
+         the dropdown's overflow-y:auto cannot clip it. Positioned in JS. -->
+    <div class="model-tooltip" id="modelTooltip" role="tooltip"></div>
 </body>
 </html>`;
   }
