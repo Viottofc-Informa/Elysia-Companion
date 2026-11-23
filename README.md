@@ -21,12 +21,12 @@ timestamp: '2026-10-20'
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://code.visualstudio.com/)
 [![Informa](https://img.shields.io/badge/Informa-Design%20System-indigo.svg)](https://www.informa.com/)
-[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](CHANGELOG.md)
-[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.2.1.vsix)
+[![Version](https://img.shields.io/badge/version-0.3.1-green.svg)](CHANGELOG.md)
+[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.3.1.vsix)
 
-A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
+A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching**, **plugin management**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
 
-> **Latest Release:** v0.2.1 — [Download VSIX](releases/elysia-companion-0.2.1.vsix) | New: CLI v0.3.10 support with Model Information (context, pricing, quota expiry)!
+> **Latest Release:** v0.3.1 — [Download VSIX](releases/elysia-companion-0.3.1.vsix) | New: **Plugins tab** — toggle Caveman/Ponytail (mode + level) without hand-editing settings.json!
 
 ---
 
@@ -38,11 +38,12 @@ Elysia Companion integrates directly with your VS Code workflow to provide:
 - **📉 Compression Stats**: Detailed metrics — tokens saved, USD saved, top projects/models
 - **🤖 Model Management**: Easy switching between AI models (Claude, GPT, Kimi, etc.)
 - **🔒 Private Mode**: Toggle between Standard (LLM cloud) and Private (local only) modes
+- **🧩 Plugin Manager**: Toggle Caveman/Ponytail (mode + level) from the dashboard; Tracing/Shunt shown as managed
 - **🚀 Service Control**: Restart compression service when needed
 - **🎨 Informa Design**: Official Informa color palette and typography
 - **🌓 Dual Theme**: Full Light & Dark mode support with Informa colors
 - **🚦 Visual Status**: Color-coded indicators (🟢🟡🔴) for quick assessment
-- **📑 Tabbed Dashboard**: Usage tab for daily tasks, Compression tab for analytics
+- **📑 Tabbed Dashboard**: Usage tab for daily tasks, Compression tab for analytics, Plugins tab for plugin management
 
 ---
 
@@ -139,12 +140,12 @@ Two tabs, each with its own focus:
 
 ### Quick Install (Latest Release)
 
-**Download:** [elysia-companion-0.2.0.vsix](releases/elysia-companion-0.2.0.vsix)
+**Download:** [elysia-companion-0.3.1.vsix](releases/elysia-companion-0.3.1.vsix)
 
 ```powershell
 # Download and install in one command
-Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.0.vsix" -OutFile "elysia-companion-0.2.0.vsix"
-code --install-extension elysia-companion-0.2.0.vsix
+Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix" -OutFile "elysia-companion-0.3.1.vsix"
+code --install-extension elysia-companion-0.3.1.vsix
 ```
 
 ### From VSIX (Recommended for Teams)
@@ -152,7 +153,7 @@ code --install-extension elysia-companion-0.2.0.vsix
 1. Download the latest `.vsix` from [releases/](releases/)
 2. Install via command line:
    ```powershell
-   code --install-extension elysia-companion-0.2.0.vsix
+   code --install-extension elysia-companion-0.3.1.vsix
    ```
 3. Or drag-and-drop the `.vsix` file into VS Code Extensions panel
 
@@ -168,7 +169,7 @@ cd elysia-companion
 npm install
 npm run compile
 npx vsce package --no-dependencies
-code --install-extension elysia-companion-0.2.0.vsix
+code --install-extension elysia-companion-0.3.1.vsix
 ```
 
 ---
@@ -271,7 +272,7 @@ elysia-companion/
 │   └── detailsPanel.ts       # Webview dashboard (HTML/JS/CSS)
 ├── out/                      # Compiled JavaScript
 ├── releases/                 # Packaged VSIX files
-│   └── elysia-companion-0.2.0.vsix
+│   └── elysia-companion-0.3.1.vsix
 ├── architecture/
 │   ├── design.md             # Architecture decisions (ADRs)
 │   └── spec.md               # Data contracts
@@ -383,8 +384,8 @@ For issues and feature requests, please use the [GitHub issue tracker](https://g
 
 **Maintained by:** Informa AI Team  
 **Publisher:** Informa PLC  
-**Version:** 0.2.0  
-**Last Updated:** 2026-10-09  
+**Version:** 0.3.1  
+**Last Updated:** 2026-11-23  
 **License:** MIT
 
 ---

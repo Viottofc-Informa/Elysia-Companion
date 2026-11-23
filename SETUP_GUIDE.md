@@ -15,7 +15,7 @@ timestamp: '2026-10-20'
 
 > **One-time setup per workstation** | Support: Informa AI Team
 >
-> **Extension:** elysia-companion | **Version:** 0.2.1 | **License:** MIT
+> **Extension:** elysia-companion | **Version:** 0.3.1 | **License:** MIT
 
 ---
 
@@ -40,11 +40,11 @@ Before installing the extension, ensure:
 ## Download the Extension
 
 1. Download the latest `.vsix` file:
-   - **Direct:** [elysia-companion-0.2.1.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.1.vsix)
+   - **Direct:** [elysia-companion-0.3.1.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix)
    - **Releases page:** [github.com/Viottofc-Informa/Elysia-Companion/releases](https://github.com/Viottofc-Informa/Elysia-Companion/releases)
    - **Or via PowerShell one-liner:**
      ```powershell
-     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.2.1.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.2.1.vsix"
+     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.3.1.vsix"
      ```
 
 2. Save to your **Downloads** folder or a known location

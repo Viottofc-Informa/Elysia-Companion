@@ -27,7 +27,7 @@ Enable Elysia users to monitor usage, manage models, control services, and analy
 ### 1.4 Delivery
 - **Package**: `.vsix` file — versioned in `releases/` and downloadable from GitHub
 - **Marketplace**: VS Code Extension Marketplace (future)
-- **Dashboard**: Webview panel embedded in VS Code (2 tabs)
+- **Dashboard**: Webview panel embedded in VS Code (3 tabs)
 
 ### 1.5 Behavioral Rules
 - Never block the editor (async operations)
@@ -203,12 +203,14 @@ elysia-companion/
 │   ├── extension.js             # Compiled entry point
 │   ├── elysiaService.js         # Core service
 │   ├── statusBarManager.js      # UI: Status bar
-│   └── detailsPanel.js          # UI: Webview
+│   ├── detailsPanel.js          # UI: Webview
+│   └── settingsService.js       # Plugin state I/O
 ├── src/
 │   ├── extension.ts             # Entry point, command registration
 │   ├── elysiaService.ts         # CLI communication, parsing ★
 │   ├── statusBarManager.ts      # Status bar lifecycle
-│   ├── detailsPanel.ts          # Webview HTML/JS/CSS with 2 tabs
+│   ├── detailsPanel.ts          # Webview HTML/JS/CSS with 3 tabs
+│   ├── settingsService.ts       # Plugin state: ~/.claude/settings.json (v0.3.1)
 │   └── test/
 │       └── runTest.ts           # Test runner
 ├── architecture/
@@ -293,7 +295,7 @@ webview.onDidReceiveMessage(async (msg) => {
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Usage Tracking | ✅ | Status bar with lighthouse indicators |
-| Dashboard | ✅ | Webview with 2 tabs: **Usage** and **Compression** |
+| Dashboard | ✅ | Webview with 3 tabs: **Usage**, **Compression**, **Plugins** |
 | Restart Service | ✅ | Fixed compression restart with execAsync |
 | Change Model | ✅ | Working after fixing exec pattern |
 | Model Selector | ✅ | Dropdown with active badge in **Usage tab** |

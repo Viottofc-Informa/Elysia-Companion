@@ -1,41 +1,45 @@
-# Release Notes v0.2.1 — CLI v0.3.10 Compatibility
+# Release Notes v0.3.1 — Plugin Manager
 
-**Release Date:** 2026-10-20  
-**Download:** [elysia-companion-0.2.1.vsix](releases/elysia-companion-0.2.1.vsix)
+**Release Date:** 2026-11-23  
+**Download:** [elysia-companion-0.3.1.vsix](releases/elysia-companion-0.3.1.vsix)
 
 ---
 
 ## 🎯 What's New
 
-### Enhanced Config Support
+### 🧩 Plugins Tab
 
-Full compatibility with **Elysia CLI v0.3.10** new `--config` output fields:
+New **Plugins** tab in the dashboard to manage elysia-code plugins without
+hand-editing `~/.claude/settings.json`:
 
-#### 🤖 Model Information Section
+- **Caveman** — toggle + level selector (`caveman` / `manual` / `off`)
+- **Ponytail** — toggle + level selector (`lite` / `full` / `ultra` / `off`)
+- **Tracing** and **Shunt** — shown as read-only "Managed" badges (governance /
+  always-on; no user toggle)
+- Post-save banner with a **🚀 Restart** button that restarts the Elysia session
+  (compression + Claude Code) so changes take effect
 
-New card in Usage tab displaying model specifications:
-- **Context Window:** Maximum token context (e.g., "1048576 tokens")
-- **Auto-Compact:** Threshold for automatic compaction (e.g., "900000 tokens")
-- **Input / 1M tokens:** Input pricing (e.g., "$3.30 USD")
-- **Output / 1M tokens:** Output pricing (e.g., "$16.50 USD")
+Plugin state is read from and written to the `env` block of
+`~/.claude/settings.json` via the new `SettingsService` — writes are atomic and
+only ever touch `CAVEMAN_DEFAULT_MODE` / `PONYTAIL_DEFAULT_MODE`, preserving every
+other key (tokens, certificates, LangSmith config).
 
-#### 📅 Quota Information
+### New Command
 
-Enhanced Usage section with expiry tracking:
-- **Reset Frequency:** When usage resets (e.g., "Monthly")
-- **Quota Expires:** Expiry date for current quota period (e.g., "2026-12-31")
-
-#### 📄 Compression Log
-
-New card displaying the path to compression log file when available.
+- `Elysia Usage: Manage Plugins` — opens the dashboard directly on the Plugins tab
 
 ---
 
-## 🐛 Bug Fixes
+## 🔄 Changed
 
-### UI Improvements
-- **Model Information** card repositioned below Usage Summary for better logical flow
-- All new fields gracefully degrade when running against older CLI versions
+### Compression Restart
+
+`restartCompression()` now uses `elysia-code --compression-restart` — a single
+atomic command that performs disable+enable internally. The legacy
+`--compression-disable` → `--compression-enable` two-step sequence was removed
+(the `--compression-disable` flag is being retired from the CLI). Falls back to
+`--compression-enable` on older CLIs. This fixes the Restart button on both the
+Usage and Plugins tabs.
 
 ---
 
@@ -43,32 +47,31 @@ New card displaying the path to compression log file when available.
 
 | File | Description | Size |
 |------|-------------|------|
-| [elysia-companion-0.2.1.vsix](releases/elysia-companion-0.2.1.vsix) | VS Code Extension Package | ~66 KB |
+| [elysia-companion-0.3.1.vsix](releases/elysia-companion-0.3.1.vsix) | VS Code Extension Package | ~72 KB |
 
 ---
 
 ## 🔧 Installation
 
-```bash
+```powershell
 # VS Code
-## 2026-10-20 — AI Workspace"\elysia-tracker-usage\elysia-companion-0.2.1.vsix
+code --install-extension elysia-companion-0.3.1.vsix
 
 # VS Code Insiders
-code-insiders --install-extension elysia-companion-0.2.1.vsix
+code-insiders --install-extension elysia-companion-0.3.1.vsix
 ```
 
 Or install via VS Code:
 1. Open Extensions panel (Ctrl+Shift+X)
 2. Click "..." (More Actions) → "Install from VSIX"
-3. Select `elysia-companion-0.2.1.vsix`
+3. Select `elysia-companion-0.3.1.vsix`
 
 ---
 
 ## 🔄 Upgrade Notes
 
-**From v0.2.0:** Seamless upgrade. Reload VS Code window after installation.
-
-**From v0.1.x:** Configuration settings preserved. New compression features will be auto-discovered.
+**From v0.2.x:** Seamless upgrade. Reload the VS Code window after installation.
+Plugin settings are read live from `~/.claude/settings.json` — no migration needed.
 
 ---
 

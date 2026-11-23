@@ -7,7 +7,7 @@ tags:
   - schema
   - types
   - contract
-generated: { by: "human:viottof", at: '2026-10-20T00:00:00Z' }
+generated: { by: "human:viottof", at: '2026-11-23T00:00:00Z' }
 status: stable
 ---
 
@@ -323,10 +323,11 @@ interface Commands {
   'elysiaUsage.togglePrivateMode': () => Promise<void>;
   'elysiaUsage.getModels': () => Promise<ModelsResponse>;
   'elysiaUsage.changeModel': (modelName: string) => Promise<void>;
+  'elysiaUsage.managePlugins': () => Promise<void>;                 // opens dashboard on Plugins tab
 }
 ```
 
-> **Consistency check:** the 8 IDs above must match `contributes.commands` in `package.json` exactly.
+> **Consistency check:** the 9 IDs above must match `contributes.commands` in `package.json` exactly.
 > Verification: `node -e "require('./package.json').contributes.commands.forEach(c=>console.log(c.command))"` against
 > `grep -oE "registerCommand\('[^']+'" src/extension.ts`.
 >
@@ -358,11 +359,13 @@ interface StatusBarItem {
 via the `init` message, so the panel can open directly on either tab.
 
 ```typescript
+type TabName = 'usage' | 'compression' | 'plugins';
+
 DetailsPanel.show(
   config: ElysiaConfig,
   extensionUri: vscode.Uri,
   elysiaService?: ElysiaService,
-  initialTab?: 'usage' | 'compression'
+  initialTab?: TabName
 ): void;
 ```
 
@@ -373,13 +376,15 @@ If the panel is already open, `show()` reveals it and posts a `switchTab` messag
 **Extension → WebView:**
 ```typescript
 type WebViewMessage =
-  | { type: 'init'; extensionUri: string; initialTab: 'usage' | 'compression' }
-  | { type: 'switchTab'; tab: 'usage' | 'compression' }
+  | { type: 'init'; extensionUri: string; initialTab: TabName }
+  | { type: 'switchTab'; tab: TabName }
   | { type: 'modelsLoaded'; models: string[]; activeModel: string }
   | { type: 'modelChanged' }
   | { type: 'modelChangeError'; error: string }
   | { type: 'compressionStatusLoaded'; enabled: boolean }
-  | { type: 'compressionStatsLoaded'; stats: CompressionStats | null };
+  | { type: 'compressionStatsLoaded'; stats: CompressionStats | null }
+  | { type: 'pluginsLoaded'; plugins: PluginState[] | null }
+  | { type: 'pluginModeSet'; success: boolean; restartRequired: boolean; error: string | null };
 ```
 
 **WebView → Extension:**
@@ -392,8 +397,39 @@ type ExtensionMessage =
   | { command: 'loadModels' }
   | { command: 'changeModel'; model: string }
   | { command: 'loadCompressionStatus' }
-  | { command: 'loadCompressionStats' };
+  | { command: 'loadCompressionStats' }
+  | { command: 'loadPlugins' }
+  | { command: 'setPluginMode'; plugin: 'caveman' | 'ponytail'; mode: string };
 ```
+
+---
+
+## Plugin State (v0.3.1)
+
+Source of truth: `~/.claude/settings.json` → `env` block (resolved via `os.homedir()`).
+Managed by `SettingsService` (`src/settingsService.ts`). See ADR-008 in `design.md`.
+
+```typescript
+type ControllablePlugin = 'caveman' | 'ponytail';
+
+interface PluginState {
+  id: 'caveman' | 'ponytail' | 'tracing' | 'shunt';
+  name: string;
+  version?: string;          // "4.1.0" / "5.3.3" (controllable only)
+  controllable: boolean;     // false for tracing/shunt (read-only "Managed")
+  mode: string;              // current mode; 'on' | 'off' for read-only plugins
+  modes?: string[];          // allowed modes (controllable only)
+}
+
+// Caveman modes:  ['caveman', 'manual', 'off']        → CAVEMAN_DEFAULT_MODE
+// Ponytail modes: ['lite', 'full', 'ultra', 'off']    → PONYTAIL_DEFAULT_MODE
+```
+
+Rules:
+- Only `CAVEMAN_DEFAULT_MODE` / `PONYTAIL_DEFAULT_MODE` are ever written.
+- Writes are atomic (temp file + rename); a corrupt/unparseable settings.json is never overwritten.
+- Tracing reflects `TRACE_TO_LANGSMITH`; Shunt reflects presence of `SHUNT_*` vars — both read-only.
+- Changes apply only after the Elysia/Claude Code session restarts (see restart semantics in ADR-008).
 
 ---
 
@@ -429,7 +465,8 @@ interface FileStructure {
   'src/extension.ts': 'Entry point, command registration';
   'src/elysiaService.ts': 'CLI communication, parsing ★';
   'src/statusBarManager.ts': 'Status bar lifecycle';
-  'src/detailsPanel.ts': 'Webview HTML/JS/CSS';
+  'src/detailsPanel.ts': 'Webview HTML/JS/CSS (Usage, Compression, Plugins tabs)';
+  'src/settingsService.ts': 'Plugin state read/write to ~/.claude/settings.json (v0.3.1)';
 
   // Output (Compiled)
   'out/extension.js': 'Compiled entry point';
@@ -499,5 +536,5 @@ Restart Claude Code to apply the change.
 
 ---
 
-**Last Updated:** 2026-10-13  
+**Last Updated:** 2026-11-23  
 **Maintained by:** Informa AI Team

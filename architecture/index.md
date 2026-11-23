@@ -6,27 +6,28 @@ tags:
   - index
   - navigation
   - documentation
-generated: { by: "human:viottof", at: '2026-10-20T00:00:00Z' }
+generated: { by: "human:viottof", at: '2026-11-23T00:00:00Z' }
 status: stable
 ---
 
 # Elysia Companion — Documentation Index
 
-> **Version:** 0.2.1 | **Status:** Production Ready
+> **Version:** 0.3.1 | **Status:** Production Ready
 
 ## Quick Links
 
 - [Project Overview](../CLAUDE.md) — North Star, data schema, file structure
 - [User Documentation](../README.md) — Installation, usage, troubleshooting
 - [Setup Guide](../SETUP_GUIDE.md) — Step-by-step installation
-- [Release Notes](../RELEASE_NOTES_v0.2.1.md) — v0.2.1: CLI v0.3.10 compatibility
+- [Release Notes](../RELEASE_NOTES.md) — Latest release notes
 - [Changelog](../CHANGELOG.md) — Version history
 - [Development Log](../log.md) — Detailed change history
 
 ## Architecture Documents
 
-- [Design](design.md) — Architecture Decisions (ADRs, 7 records)
+- [Design](design.md) — Architecture Decisions (ADRs, 8 records)
 - [Specification](spec.md) — Data contracts and schemas
+- [Plugin Manager Plan](plans/plugin_manager_plan.md) — BLAST plan for the Plugins tab (v0.3.1)
 
 ## Development
 
@@ -49,4 +50,4 @@ status: stable
 ---
 
 **Maintained by:** Informa AI Team  
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-11-23

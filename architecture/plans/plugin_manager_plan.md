@@ -10,7 +10,7 @@ tags:
   - plan
   - blast
 generated: { by: "human:viottof", at: '2026-11-23T00:00:00Z' }
-status: draft
+status: stable
 ---
 
 # Plugin Manager — BLAST Plan
