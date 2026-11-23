@@ -513,7 +513,11 @@ See `architecture/design.md` for full ADR history.
 ## 9. Next Actions (Backlog)
 
 - [ ] Submit to VS Code Marketplace
-- [ ] Restore `npm run lint` — no ESLint config file exists (`eslint src --ext ts` errors out)
+- [ ] Restore `npm run lint` — no ESLint config file exists, so `eslint src --ext ts` errors out
+      ("couldn't find a configuration file"). All three devDependencies are already
+      installed (`eslint ^8.56.0`, `@typescript-eslint/eslint-plugin` and `.../parser`
+      `^6.15.0`) — only `.eslintrc.json` is missing. Removed from `pretest` in v0.3.2 so it
+      does not block `npm test`; add the config, then re-add `&& npm run lint` to `pretest`.
 - [ ] Extend the test harnesses to `elysiaService.ts` parsing (currently webview-only)
 - [ ] Implement diagnostic health check
 - [ ] Add usage history chart (trend over time)
