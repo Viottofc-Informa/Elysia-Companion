@@ -12,7 +12,7 @@ status: stable
 
 # Elysia Companion — Documentation Index
 
-> **Version:** 0.3.1 | **Status:** Production Ready
+> **Version:** 0.3.2 | **Status:** Production Ready
 
 ## Quick Links
 
@@ -25,14 +25,15 @@ status: stable
 
 ## Architecture Documents
 
-- [Design](design.md) — Architecture Decisions (ADRs, 8 records)
+- [Design](design.md) — Architecture Decisions (ADRs, 9 records)
 - [Specification](spec.md) — Data contracts and schemas
 - [Plugin Manager Plan](plans/plugin_manager_plan.md) — BLAST plan for the Plugins tab (v0.3.1)
+- [Model Selector Metadata Plan](plans/model_selector_metadata_plan.md) — BLAST plan for the model selector redesign (v0.3.2)
 
 ## Development
 
 - Source code: `src/` directory
-- Tests: `src/test/` directory
+- Tests: `tests/` directory — run with `npm test` (58 checks, no Extension Host needed)
 - Build output: `out/` directory
 - Packaged extension: `releases/` directory
 - Build scripts: `build-release.ps1`, `build-and-package.ps1`, `build-and-package.cmd`

@@ -1,7 +1,7 @@
 # Elysia Companion — Project Map
 
 > **Project Type:** VS Code Extension  
-> **Status:** ✅ Production Ready (v0.3.1)  
+> **Status:** ✅ Production Ready (v0.3.2)  
 > **Last Updated:** 2026-11-23  
 > **BLAST Phase:** 5 (Trigger - Deployed)  
 > **Repository:** https://github.com/Viottofc-Informa/Elysia-Companion
@@ -191,6 +191,45 @@ interface Commands {
 | `🟢 Compression` | 99 | `elysiaUsage.showCompressionDetails` |
 | `🔓 Standard` / `🔒 Private` | 98 | `elysiaUsage.togglePrivateMode` |
 
+### 2.7 Model Metadata Catalog (v0.3.2)
+
+Source: curated in `src/modelCatalog.ts` — **not** read from the CLI (see ADR-009).
+
+```typescript
+interface PriceTier {
+  short: number;      // USD per 1M tokens, prompt at or below `threshold`
+  long: number;       // USD per 1M tokens, prompt above `threshold`
+  threshold: number;  // prompt-token boundary
+}
+
+interface ModelMeta {
+  label: string;         // "Kimi K3"
+  bestFor: string;       // "General-purpose coding & long-form tasks"
+  context: number;       // 1048576 (tokens)
+  autoCompact: number;   // 900000 (tokens)
+  input: PriceTier;
+  output: PriceTier;
+}
+
+// MODEL_CATALOG: Record<string, ModelMeta> — 13 entries, keyed by CLI model id
+```
+
+**Invariants:**
+- **Own-property lookup only.** Always resolve via `hasOwnProperty` (wrapped as
+  `lookupMeta()`). A bare `MODEL_CATALOG[id]` reaches `Object.prototype`, so a model
+  named `toString`/`constructor`/`__proto__` renders a literal `"undefined"` line
+  and throws in the tooltip.
+- **Missing entries degrade, never fabricate.** A model absent from the catalog
+  renders name-only: no metadata line, no `ⓘ`, still selectable.
+- **Inline handler scope.** Webview inline attributes (`onclick`, `onmouseenter`)
+  are compiled by the browser with the **global object** as scope chain. Anything
+  declared with `let`/`const` inside the webview IIFE is invisible to them. Handlers
+  therefore carry only **numeric literals** and call `window`-level functions
+  (`selectModelByIndex(n)`, `showModelTip(this, n)`) that close over IIFE state.
+  Interpolating a model id into a handler is both an injection risk and a scoping bug.
+- **Formatting lives in TypeScript.** The catalog is pre-rendered to a serialisable
+  view via `buildCatalogView()`; the webview never re-implements formatting.
+
 ---
 
 ## 3. File Structure
@@ -210,17 +249,23 @@ elysia-companion/
 │   ├── elysiaService.ts         # CLI communication, parsing ★
 │   ├── statusBarManager.ts      # Status bar lifecycle
 │   ├── detailsPanel.ts          # Webview HTML/JS/CSS with 3 tabs
-│   ├── settingsService.ts       # Plugin state: ~/.claude/settings.json (v0.3.1)
-│   └── test/
-│       └── runTest.ts           # Test runner
+│   ├── modelCatalog.ts          # Curated model metadata (v0.3.2) ★
+│   └── settingsService.ts       # Plugin state: ~/.claude/settings.json (v0.3.1)
+├── tests/                       # Webview test harnesses (run: npm test)
+│   ├── run_all.js               # Runner — both harnesses, fails on FAIL
+│   ├── emit_html.js             # Static checks on the real emitted HTML
+│   ├── dom_sim.js               # Behavioural checks against a DOM stub
+│   └── make_preview.js          # Builds mockups/model_selector_preview.html
 ├── architecture/
-│   ├── design.md                # Why spawn vs exec
-│   └── spec.md                  # Data contracts
+│   ├── index.md                 # Progressive-disclosure nav
+│   ├── design.md                # ADR history (9 records)
+│   ├── spec.md                  # Data contracts
+│   └── plans/                   # BLAST plans per feature
 ├── handoffs/
 │   ├── handoff_change_model_test.md      # Model change debugging
 │   └── handoff_change_model_test_v2.md   # Results & fixes
 ├── releases/
-│   └── elysia-companion-0.2.0.vsix       # Packaged extension
+│   └── elysia-companion-0.3.2.vsix       # Packaged extension
 ├── tools/
 │   └── build_vscode_extension.py         # Build + package (Python)
 ├── build-release.ps1            # Build + package (PowerShell)
@@ -299,6 +344,7 @@ webview.onDidReceiveMessage(async (msg) => {
 | Restart Service | ✅ | Fixed compression restart with execAsync |
 | Change Model | ✅ | Working after fixing exec pattern |
 | Model Selector | ✅ | Dropdown with active badge in **Usage tab** |
+| Model Metadata | ✅ | v0.3.2 — Context + pricing per row, `ⓘ` detail tooltip, provenance footer |
 | Private Mode Toggle | ✅ | Status bar icon + dashboard button |
 | Compression Stats | ✅ | v0.2.0 — Detailed metrics from `--compression-stats --json` |
 | Session/Lifetime Savings | ✅ | v0.2.0 — Tokens and USD saved display |
@@ -344,7 +390,34 @@ View detailed logs:
 2. Select "Elysia Companion" from dropdown
 3. Logs format: `[ElysiaService] Message`
 
-### 6.3 Test Commands
+### 6.3 Tests
+
+```bash
+npm test          # 58 checks — 14 static + 44 behavioural
+```
+
+No Extension Host required. The harnesses work by extracting the **real** webview
+HTML from the compiled extension (`out/detailsPanel.js`) with a stubbed `vscode`
+module, then asserting on it two ways:
+
+| Harness | What it proves |
+|---------|----------------|
+| `tests/emit_html.js` | The emitted markup is correct — catalog injected, tooltip on `<body>`, footer text, CSS rules, and that the row template builds handlers from the row index rather than interpolating a model ID |
+| `tests/dom_sim.js` | The emitted **script** behaves correctly against a DOM stub with parameterised geometry — rendering, tooltip open/close/flip, unknown-model fallback, hostile IDs, and the model-change flow |
+
+**The critical detail:** `dom_sim.js` extracts the rendered `onclick` attribute text
+and evaluates it in **global scope**, the way a browser does. Calling
+`window.selectModel()` directly bypasses that and will not catch IIFE-scope reference
+bugs — which is exactly how the "clicking a model does nothing" regression shipped.
+Do not replace those checks with direct function calls.
+
+Both harnesses are mutation-tested: reintroducing the click bug produces 12 failures
+and `npm test` exits non-zero.
+
+`make_preview.js` builds `mockups/model_selector_preview.html`, a browser-openable
+preview generated from the same emitted HTML, so it cannot drift from what ships.
+
+### 6.4 Test Commands
 
 Test CLI manually before implementing:
 ```powershell
@@ -405,6 +478,18 @@ elysia-code --compression-enable
 - ⚠️ Two places to keep in sync — a checklist item for every new command
 - 📌 Also applies to `keybindings`, `menus`, and any UI that references a command ID
 
+### ADR-009: Model metadata is a curated catalog, not read from the CLI
+
+**Context**: The model selector needed context window and pricing per model. `elysia-code --models` returns **names only**; context and pricing exist in the CLI's `MODEL_CONTEXT_LIMITS` / `MODEL_COSTS` maps but are printed for the **active model only**, and the "Best for" prose does not exist in the CLI at all.
+
+**Decision**: Curate the metadata in `src/modelCatalog.ts`, keyed by CLI model id, while the **list** stays live from `--models`.
+
+**Consequences**:
+- ✅ Selector is consistent with `pilots.ai.informa.com/elysia-code/` and independent of CLI output format changes
+- ✅ The five `--config` price/context fields still drive the Model Information card; the catalog only enriches the *selector*
+- ⚠️ Catalog drifts as the gateway adds/removes models — a model absent from it degrades to name-only rather than breaking
+- 📌 Numeric fields are verified against the site (13/13); prose is adapted, not verbatim — recorded in the file header
+
 See `architecture/design.md` for full ADR history.
 
 ---
@@ -428,7 +513,8 @@ See `architecture/design.md` for full ADR history.
 ## 9. Next Actions (Backlog)
 
 - [ ] Submit to VS Code Marketplace
-- [ ] Add tests (currently 0% coverage)
+- [ ] Restore `npm run lint` — no ESLint config file exists (`eslint src --ext ts` errors out)
+- [ ] Extend the test harnesses to `elysiaService.ts` parsing (currently webview-only)
 - [ ] Implement diagnostic health check
 - [ ] Add usage history chart (trend over time)
 - [ ] Add compression savings trend chart (`savings_history` from JSON is currently unused)

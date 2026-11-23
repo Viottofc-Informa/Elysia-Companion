@@ -14,12 +14,22 @@ build-and-package.ps1
 build-and-package.cmd
 *.ps1
 *.cmd
+*.sh
 
 # Development files
 log.md
 CLAUDE.md
 architecture/**
 handoffs/**
+tools/**
 
-!out/**
-!node_modules/**/
+# Scratch and generated artifacts — never ship
+.tmp/**
+mockups/**
+tests/**
+.git
+mockup-*.html
+
+# NOTE: do NOT add `!out/**` here. Nothing above excludes `out/`, so the negation
+# is unnecessary — and because it runs after `**/*.map`, it re-included the source
+# maps that rule had excluded. The compiled JS ships; the maps do not.

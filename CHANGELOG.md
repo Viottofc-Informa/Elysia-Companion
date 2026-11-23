@@ -2,6 +2,66 @@
 
 All notable changes to the "Elysia Companion" extension will be documented in this file.
 
+## [0.3.2] - 2026-11-23
+
+### Added
+- **Model metadata in the selector**: every row in the Usage tab's model dropdown now
+  shows a second line with context window and pricing (e.g. `262K ctx · $0.95 in / $4.00 out`)
+- **`ⓘ` detail tooltip** per model: "best for" description, exact context window,
+  auto-compact threshold, and full input/output pricing. Opens on hover and on keyboard
+  focus, flips above the row when there is not enough room below, and closes on scroll
+- **`src/modelCatalog.ts`**: typed catalog of the 13 gateway models (label, description,
+  context, auto-compact, pricing), with formatting helpers
+- Provenance footer in the dropdown stating the metadata source and verification date
+  (`pilots.ai.informa.com/elysia-code/`, verified 2026-11-23)
+
+### Changed
+- Model dropdown `max-height` raised from `300px` to `min(60vh, 520px)` to fit the
+  taller two-line rows
+- Dropdown footer is now `position: sticky`, so the provenance line stays visible
+  in a scrolled list
+
+### Fixed
+- **Clicking a model did nothing** (regression found in testing): the row `onclick`
+  called `selectModel(availableModels[n])`, but inline attribute handlers are
+  compiled in **global** scope and `availableModels` is IIFE-scoped — every click
+  threw `ReferenceError` and died silently, leaving no way to change models.
+  Handlers now call a `window`-level `selectModelByIndex(n)`. Hover was unaffected
+  because it passes literals only.
+- **Prototype-key model IDs**: `MODEL_CATALOG[model]` reached `Object.prototype`, so
+  a gateway model named `toString`/`constructor`/`__proto__` rendered a literal
+  `"undefined"` metadata line and threw in the tooltip instead of degrading to
+  name-only. Now guarded with `hasOwnProperty`.
+- **Tooltip off-screen in narrow panels**: the left-edge clamp used `Math.min` over
+  `innerWidth - tipWidth - 8`, which goes negative below ~300px width and pushed the
+  tooltip off-screen. Now clamped low-to-high, with
+  `max-width: min(320px, calc(100vw - 16px))`.
+- **Packaging leaks**: `.vscodeignore` was letting build scripts (`*.sh`), source maps
+  (`out/**/*.map` — the `!out/**` negation re-included files that `**/*.map` had
+  excluded), and legacy root-level `mockup-*.html` files into the VSIX. ~11 files /
+  ~125 KB removed from the package.
+
+### Security
+- Model IDs are no longer interpolated into inline handler string literals. HTML
+  entities are decoded before an attribute compiles as JS, so an ID containing `'`
+  could previously break out of the string. Handlers now carry only a numeric row
+  index and resolve the ID at call time.
+
+### Technical
+- `PriceTier` models prompt-length-conditional pricing explicitly; `claude-haiku-5-5` is
+  the only tiered model (short rate in the list, both ranges in the tooltip)
+- The catalog is pre-rendered to a serialisable view model and embedded in the webview,
+  keeping all formatting in TypeScript rather than duplicated in browser JS
+- A model returned by `--models` but absent from the catalog still renders and stays
+  selectable, with no second line and no `ⓘ` — metadata is never fabricated
+- ADR-009: model metadata is a curated catalog rather than read from the CLI
+  (see `architecture/design.md`)
+- Verified by executing the emitted webview JS against a simulated DOM with
+  configurable geometry: 44 behavioural checks (rendering, tooltip open/close/flip
+  across six viewport sizes and four anchor positions, global-scope handler
+  evaluation, unknown-model fallback, hostile model IDs, model-change flow) plus
+  14 static checks on the emitted HTML. The suite is mutation-tested.
+
 ## [0.3.1] - 2026-11-23
 
 ### Added

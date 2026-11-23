@@ -5,6 +5,147 @@
 
 ---
 
+## 2026-11-23 — Rich model selector (v0.3.2)
+
+### Summary
+The Usage tab's model dropdown listed bare IDs. Each row now shows two lines —
+model name plus `262K ctx · $0.95 in / $4.00 out` — with an `ⓘ` button opening a
+detail tooltip (description, exact context, auto-compact, full pricing). Selecting a
+model still goes through the existing confirmation dialog.
+
+### Changed
+- `src/modelCatalog.ts` (new) — typed catalog of 13 models: label, "best for",
+  context, auto-compact and pricing, plus `formatContext` / `formatInlinePrice` /
+  `buildCatalogView`; verification date recorded in the header
+- `src/detailsPanel.ts` — two-line rows, `ⓘ` tooltip (`position: fixed` on `<body>` so
+  the dropdown's `overflow-y: auto` cannot clip it; flips above when short of room),
+  dropdown `max-height: 300px → min(60vh, 520px)`, provenance footer
+- `architecture/design.md` — ADR-009; `architecture/spec.md` — catalog contract
+- `architecture/plans/model_selector_metadata_plan.md` (new) — BLAST plan
+
+### Rationale
+`elysia-code --models` returns names only — context and pricing live in
+`MODEL_CONTEXT_LIMITS` / `MODEL_COSTS` but are printed only for the active model, and
+the "Best for" text is not in the CLI at all. Metadata is therefore curated in the
+extension while the list stays live from the CLI; a model missing from the catalog
+renders name-only rather than breaking. See ADR-009.
+
+### Notes
+- Verified by executing the emitted webview JS against a simulated DOM with
+  configurable geometry (37/37 checks): rendering, tooltip open/close/flip across six
+  viewport sizes and four anchor positions, unknown-model fallback, hostile model IDs,
+  and the model-change flow. Plus 14 static checks on the emitted HTML.
+- Fixed during implementation: `getElementById('modelTooltip')` ran before the element
+  existed in the document; `formatContext` rounded `196608` up to `197K` instead of
+  flooring to `196K`.
+- Fixed packaging: `.vscodeignore` does not read `.gitignore`, so scratch files
+  (`.tmp/`, `mockups/`, `.git`) were being bundled into the VSIX — 37 files/120KB.
+  Added explicit exclusions.
+- Packaged as `releases/elysia-companion-0.3.2.vsix`. The first build was made before
+  the version bump and collided with the published `0.3.1` filename; it was discarded.
+
+### Regression found in testing (clicking a model did nothing)
+Reported by the user after installing the build: hovering a row showed the tooltip
+correctly, but clicking a model did nothing — no confirmation dialog, so no model
+change was possible.
+
+**Cause:** the fix for handler injection replaced `selectModel('<id>')` with
+`selectModel(availableModels[<n>])`. Inline attribute handlers are compiled in
+**global** scope, and `availableModels` is declared with `let` inside the webview
+IIFE — invisible to them. Every click threw `ReferenceError: availableModels is not
+defined` and died silently. Hover kept working because `showModelTip(this, <n>)` only
+passes literals; `availableModels` was read inside the function body, which does close
+over the IIFE scope.
+
+**Fix:** the handler now calls `selectModelByIndex(<n>)`, a `window`-level function
+that closes over `availableModels` and resolves the ID. The attribute still carries
+only a bare integer, so the injection fix is preserved.
+
+**Why the test suite missed it:** the harness called `window.selectModel()` directly,
+bypassing the inline attribute the browser actually evaluates. Checks were added that
+extract the rendered `onclick` text and evaluate it in global scope, the way a browser
+does. Mutation-tested: reintroducing the bug produces 12 failures naming
+`availableModels is not defined`.
+
+A static check for this was also attempted and then removed — the emitted HTML embeds
+the row template as client-side JS source, so a regex over it cannot see the handler
+expression. Only the behavioural check catches this; a static test there would have
+passed for the wrong reason.
+
+### Post-review fixes
+A fresh-context review raised findings that were then verified and fixed:
+- **Own-property lookup.** `MODEL_CATALOG[model]` reached `Object.prototype`, so a
+  gateway model named `toString`/`constructor`/`__proto__` rendered a literal
+  `"undefined"` second line and threw in the tooltip instead of degrading to
+  name-only as documented. Now guarded by `hasOwnProperty`.
+- **Handler injection.** Model IDs were interpolated into inline handler string
+  literals; HTML entities are decoded before the attribute compiles as JS, so an id
+  containing `'` could break out and execute. Handlers now receive the numeric row
+  index and resolve the id from `availableModels` at call time. (The pattern was
+  pre-existing, but it was the last unescaped sink in the row.)
+- **Tooltip geometry.** The left clamp used `Math.min` over `innerWidth - tipWidth - 8`,
+  which goes negative in a panel narrower than the tooltip (~300px VS Code sidebar),
+  pushing it off-screen. Now clamped low-to-high, with `max-width: min(320px, 100vw - 16px)`
+  in CSS. The "covers its own anchor" flicker case is bounded by clamping `top` first.
+- **Provenance footer** was below the fold in a scrollable list, defeating its purpose;
+  now `position: sticky`, and it no longer cites a source when the list failed to load.
+- **Data-fidelity wording.** `modelCatalog.ts` claimed verbatim transcription of the
+  site's descriptions, but the prose had been condensed. The header now states that
+  the numeric fields are exact and the prose is adapted. (The numbers were verified
+  13/13 against the site.)
+- **Duplicated helper.** `formatTokenCount` was byte-identical to `formatContext`;
+  it now delegates.
+- **Test-quality gap.** The first harness used a fixed 1200x800 viewport, which could
+  not fail on the narrow-panel or short-viewport bugs. Rewritten with parameterised
+  geometry, and the stub now models the CSS `max-width` rule. Mutation-tested: reverting
+  the own-property guard produces 6 failures, so the suite is not vacuous.
+
+---
+
+## 2026-11-23 — Documentation and packaging audit (v0.3.2)
+
+### Summary
+Full sweep of the repo's description surface — README, CHANGELOG, RELEASE_NOTES,
+SETUP_GUIDE, CLAUDE.md, architecture index — plus a fresh VSIX, to confirm they
+describe what the extension actually does.
+
+### Documentation gaps closed
+- **README** — version/links were pinned to `0.3.1` (badge, install commands, tree,
+  footer); dashboard described as "Two tabs" when there are three; the Plugins tab,
+  the Model Information card, and the `elysiaUsage.managePlugins` command were all
+  undocumented; the Model Management section advertised models that do not exist on
+  the gateway ("GPT-4, GPT-4o, llama, mistral"); the CLI table lacked
+  `--compression-restart`; Troubleshooting still cited `--compression-disable`.
+- **RELEASE_NOTES** — still the v0.3.1 Plugins-tab notes. Rewritten for v0.3.2.
+- **SETUP_GUIDE** — version and download links at `0.3.1`, install examples at
+  `0.2.0`; version-history table stopped at 0.2.0, omitting 0.2.1/0.3.1/0.3.2.
+- **CHANGELOG** — the 0.3.2 entry omitted the click regression, the prototype-key
+  fix, the tooltip-clamp fix, and the packaging cleanup; added a Security section
+  for the handler-injection fix and a verification note.
+- **CLAUDE.md** — added §2.7 (catalog schema + the four invariants), ADR-009 summary,
+  `modelCatalog.ts` in the file tree, Model Metadata feature row, package version.
+- **architecture/index.md** — version 0.3.1 → 0.3.2, ADR count 8 → 9, added the
+  v0.3.2 plan.
+
+### Packaging gaps closed
+`.vscodeignore` was letting three classes of file into the VSIX:
+- `*.sh` — `build-release.sh` was shipping (the `*.ps1`/`*.cmd` rules had no `.sh` peer)
+- `out/**/*.map` — five source maps (~25 KB) leaked because the `!out/**` negation
+  runs *after* `**/*.map` and re-included them
+- `mockup-*.html` — five legacy root-level mockups (~76 KB) predating the `mockups/`
+  exclusion, which did not cover the root files
+
+Package goes from 26 files / 348 KB to 16 files / 223 KB. `extension/` now contains
+only `out/*.js`, `package.json`, `README.md`, `CHANGELOG.md`, `RELEASE_NOTES.md`,
+`SETUP_GUIDE.md`, `tools/build_vscode_extension.py`, and `build-release.sh` is gone.
+
+### Verified
+`unzip -l` on the rebuilt VSIX confirms every exclusion; `selectModelByIndex` present
+in the packaged `out/detailsPanel.js`; 44/44 behavioural + 14/14 static checks pass
+against the emitted HTML.
+
+---
+
 ## 2026-11-23 — Plugin Manager tab (v0.3.1)
 
 ### Summary

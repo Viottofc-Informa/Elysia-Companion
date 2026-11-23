@@ -8,14 +8,14 @@ tags:
   - configuration
   - elysia
   - vscode
-timestamp: '2026-10-20'
+timestamp: '2026-11-23'
 ---
 
 # Elysia Companion — Setup & Installation Guide
 
 > **One-time setup per workstation** | Support: Informa AI Team
 >
-> **Extension:** elysia-companion | **Version:** 0.3.1 | **License:** MIT
+> **Extension:** elysia-companion | **Version:** 0.3.2 | **License:** MIT
 
 ---
 
@@ -40,11 +40,11 @@ Before installing the extension, ensure:
 ## Download the Extension
 
 1. Download the latest `.vsix` file:
-   - **Direct:** [elysia-companion-0.3.1.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix)
+   - **Direct:** [elysia-companion-0.3.2.vsix](https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.2.vsix)
    - **Releases page:** [github.com/Viottofc-Informa/Elysia-Companion/releases](https://github.com/Viottofc-Informa/Elysia-Companion/releases)
    - **Or via PowerShell one-liner:**
      ```powershell
-     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.3.1.vsix"
+     Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.2.vsix" -OutFile "$env:USERPROFILE\Downloads\elysia-companion-0.3.2.vsix"
      ```
 
 2. Save to your **Downloads** folder or a known location
@@ -73,12 +73,12 @@ Before installing the extension, ensure:
 
 ```powershell
 # Windows PowerShell
-& code --install-extension "C:\Users\$env:USERNAME\Downloads\elysia-companion-0.2.0.vsix"
+& code --install-extension "C:\Users\$env:USERNAME\Downloads\elysia-companion-0.3.2.vsix"
 ```
 
 ```bash
 # macOS/Linux
-code --install-extension ~/Downloads/elysia-companion-0.2.0.vsix
+code --install-extension ~/Downloads/elysia-companion-0.3.2.vsix
 ```
 
 ---
@@ -338,6 +338,9 @@ The status bar should show your usage in the bottom right.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.2 | 2026-11-23 | Model selector metadata (context + pricing per row, `ⓘ` tooltip); click regression fix; packaging cleanup |
+| 0.3.1 | 2026-11-23 | Plugins tab — Caveman/Ponytail toggles; `--compression-restart`; SettingsService |
+| 0.2.1 | 2026-10-20 | CLI v0.3.10 fields — Model Information card, quota info, compression log path |
 | 0.2.0 | 2026-10-09 | Compression Stats tab; 2-tab dashboard; compression status bar item; build scripts |
 | 0.1.0 | 2026-07-27 | Initial release |
 

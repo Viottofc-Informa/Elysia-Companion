@@ -14,19 +14,19 @@ tags:
   - productivity
   - developer-tools
   - informa-connect
-timestamp: '2026-10-20'
+timestamp: '2026-11-23'
 ---
 
 # Elysia Companion
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blue.svg)](https://code.visualstudio.com/)
 [![Informa](https://img.shields.io/badge/Informa-Design%20System-indigo.svg)](https://www.informa.com/)
-[![Version](https://img.shields.io/badge/version-0.3.1-green.svg)](CHANGELOG.md)
-[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.3.1.vsix)
+[![Version](https://img.shields.io/badge/version-0.3.2-green.svg)](CHANGELOG.md)
+[![Download](https://img.shields.io/badge/Download-VSIX-orange.svg)](releases/elysia-companion-0.3.2.vsix)
 
-A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching**, **plugin management**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
+A VS Code extension that provides comprehensive management for the [Elysia](https://elysia.informa.com/) code assistant, including **usage tracking**, **compression stats**, **model switching with metadata**, **plugin management**, **service control**, and **privacy mode management** — following the official **Informa Design System**.
 
-> **Latest Release:** v0.3.1 — [Download VSIX](releases/elysia-companion-0.3.1.vsix) | New: **Plugins tab** — toggle Caveman/Ponytail (mode + level) without hand-editing settings.json!
+> **Latest Release:** v0.3.2 — [Download VSIX](releases/elysia-companion-0.3.2.vsix) | New: **model metadata** — context window and pricing on every row, with a `ⓘ` detail tooltip!
 
 ---
 
@@ -78,11 +78,29 @@ Real-time status bar display showing:
 
 ### 🤖 Model Management
 
-Dropdown selector in dashboard allowing quick switches between:
-- OpenAI models (GPT-4, GPT-4o, etc.)
-- Anthropic models (Claude Sonnet, Claude Haiku, etc.)
-- Kimi models (kimi-k2.5, etc.)
-- Local models (llama, mistral, etc.)
+Dropdown selector in the dashboard's **Usage** tab. Each row shows the model name
+plus a metadata line with context window and pricing, and an `ⓘ` button opening a
+detail tooltip:
+
+```
+kimi-k2.7-code
+262K ctx · $3.30 in / $16.50 out  ⓘ
+```
+
+The tooltip adds the **"best for"** description, the exact context window, the
+auto-compact threshold, and the full input/output rate. For models whose pricing
+depends on prompt length, both the short and long-prompt rates are shown.
+
+- **13 models catalogued** — Claude (Sonnet, Haiku), GPT, Kimi, DeepSeek, GLM,
+  MiniMax, and others available on the Informa gateway
+- **Hover or focus** a row to open the tooltip; it flips above the row when there
+  is not enough room below, and closes on scroll
+- **Fallback** — a model returned by `elysia-code --models` but not in the catalog
+  still renders and stays selectable, just without the metadata line
+- Metadata source and verification date are shown in the dropdown footer
+
+Selecting a different model opens a confirmation dialog showing old → new before
+applying the change.
 
 ### 📉 Compression Stats
 
@@ -119,12 +137,13 @@ One-click restart of the Elysia compression service when experiencing connectivi
 
 ### 📊 Detailed Dashboard
 
-Two tabs, each with its own focus:
+Three tabs, each with its own focus:
 
 **Usage tab:**
-- Model selector (top) for quick switching
+- Model selector (top) with per-model context window and pricing metadata
 - Visual progress bar with usage percentage
 - Remaining budget calculation
+- Model Information card (context window, auto-compact, pricing from the CLI)
 - Configuration details (version, workspace, config ID, compression state)
 - Private Mode toggle, LangSmith status
 - Actions panel (Refresh, Restart, Settings)
@@ -134,18 +153,23 @@ Two tabs, each with its own focus:
 - Collapsible Top Projects, Top Models, Recent Requests
 - Actions panel (Refresh Stats, Restart)
 
+**Plugins tab:**
+- Caveman and Ponytail toggles with level selectors
+- Tracing and Shunt shown as read-only "Managed" badges
+- Post-save banner with a Restart button to apply changes
+
 ---
 
 ## Installation
 
 ### Quick Install (Latest Release)
 
-**Download:** [elysia-companion-0.3.1.vsix](releases/elysia-companion-0.3.1.vsix)
+**Download:** [elysia-companion-0.3.2.vsix](releases/elysia-companion-0.3.2.vsix)
 
 ```powershell
 # Download and install in one command
-Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.1.vsix" -OutFile "elysia-companion-0.3.1.vsix"
-code --install-extension elysia-companion-0.3.1.vsix
+Invoke-WebRequest -Uri "https://github.com/Viottofc-Informa/Elysia-Companion/raw/main/releases/elysia-companion-0.3.2.vsix" -OutFile "elysia-companion-0.3.2.vsix"
+code --install-extension elysia-companion-0.3.2.vsix
 ```
 
 ### From VSIX (Recommended for Teams)
@@ -153,7 +177,7 @@ code --install-extension elysia-companion-0.3.1.vsix
 1. Download the latest `.vsix` from [releases/](releases/)
 2. Install via command line:
    ```powershell
-   code --install-extension elysia-companion-0.3.1.vsix
+   code --install-extension elysia-companion-0.3.2.vsix
    ```
 3. Or drag-and-drop the `.vsix` file into VS Code Extensions panel
 
@@ -169,7 +193,7 @@ cd elysia-companion
 npm install
 npm run compile
 npx vsce package --no-dependencies
-code --install-extension elysia-companion-0.3.1.vsix
+code --install-extension elysia-companion-0.3.2.vsix
 ```
 
 ---
@@ -213,6 +237,7 @@ Available via Command Palette (`Ctrl+Shift+P`):
 | `Elysia Usage: Refresh Usage Data` | `elysiaUsage.refresh` | Force refresh usage information |
 | `Elysia Usage: Show Detailed Usage` | `elysiaUsage.showDetails` | Open dashboard on **Usage** tab |
 | `Elysia Usage: Show Compression Stats` | `elysiaUsage.showCompressionDetails` | Open dashboard on **Compression** tab |
+| `Elysia Usage: Manage Plugins` | `elysiaUsage.managePlugins` | Open dashboard on **Plugins** tab |
 | `Elysia Usage: Restart Compression` | `elysiaUsage.restartCompression` | Restart compression service |
 | `Elysia Usage: Toggle Private Mode` | `elysiaUsage.togglePrivateMode` | Switch between Private/Standard |
 | `Elysia Usage: Get Models` | `elysiaUsage.getModels` | List available models |
@@ -255,9 +280,16 @@ Available via Command Palette (`Ctrl+Shift+P`):
 
 ### Service Restart Fails
 
-1. Check if `elysia-code --compression-disable` works
+1. Check if `elysia-code --compression-restart` works
 2. Ensure port 8787 is not blocked by firewall
 3. Restart VS Code and try again
+
+### Model Row Shows No Metadata
+
+Rows without a second line or `ⓘ` button are models the gateway returned that are
+not yet in the extension's catalog — they remain fully selectable. Run
+`elysia-code --models` to confirm the model name, and check the dropdown footer
+for the catalog's verification date.
 
 ---
 
@@ -269,10 +301,12 @@ elysia-companion/
 │   ├── extension.ts          # Entry point, command registration
 │   ├── elysiaService.ts      # Core service, CLI communication, parsing ★
 │   ├── statusBarManager.ts   # Status bar UI management
-│   └── detailsPanel.ts       # Webview dashboard (HTML/JS/CSS)
+│   ├── detailsPanel.ts       # Webview dashboard (HTML/JS/CSS)
+│   ├── modelCatalog.ts       # Curated model metadata (context, pricing, "best for")
+│   └── settingsService.ts    # Plugin state I/O (~/.claude/settings.json)
 ├── out/                      # Compiled JavaScript
 ├── releases/                 # Packaged VSIX files
-│   └── elysia-companion-0.3.1.vsix
+│   └── elysia-companion-0.3.2.vsix
 ├── architecture/
 │   ├── design.md             # Architecture decisions (ADRs)
 │   └── spec.md               # Data contracts
@@ -298,9 +332,13 @@ elysia-companion/
 | `elysia-code --models` | Model Selector | List available models |
 | `elysia-code --model "<name>"` | Model Selector | Switch active model |
 | `elysia-code --private <bool>` | Private Mode | Toggle private/standard mode |
-| `elysia-code --compression-disable` | Restart Service | Stop compression proxy |
-| `elysia-code --compression-enable` | Restart Service | Start compression proxy |
+| `elysia-code --compression-restart` | Restart Service | Atomically restart compression proxy |
+| `elysia-code --compression-enable` | Restart Service | Fallback for older CLIs |
 | `elysia-code --compression-stats --json` | Compression Tab | Fetch detailed compression metrics |
+
+Model metadata (context window, pricing, "best for") is **not** sourced from the CLI —
+it is a curated catalog in `src/modelCatalog.ts`, because `--models` returns names
+only and the "best for" prose does not exist in the CLI at all. See ADR-009.
 
 ---
 
@@ -384,7 +422,7 @@ For issues and feature requests, please use the [GitHub issue tracker](https://g
 
 **Maintained by:** Informa AI Team  
 **Publisher:** Informa PLC  
-**Version:** 0.3.1  
+**Version:** 0.3.2  
 **Last Updated:** 2026-11-23  
 **License:** MIT
 
