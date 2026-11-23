@@ -28,3 +28,6 @@ Thumbs.db
 
 # Backup of failed v0.3.0 attempt — local only
 backup_v0.3.0_attempt/
+
+# Claude Code session/worktree artifacts — local only
+.claude/
