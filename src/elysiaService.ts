@@ -419,39 +419,39 @@ export class ElysiaService {
         ? `cmd.exe /c "${commandPath}"`
         : commandPath;
 
-      this.outputChannel.appendLine('[ElysiaService] Starting compression restart sequence...');
+      this.outputChannel.appendLine('[ElysiaService] Restarting compression proxy...');
 
-      // Step 1: Disable compression
-      this.outputChannel.appendLine('[ElysiaService] Step 1: Disabling compression...');
-      const disableOutput = await this.executeCommand(`${baseCommand} --compression-disable`);
-      this.outputChannel.appendLine(`[ElysiaService] Disable output: ${disableOutput.substring(0, 500)}`);
+      // Current CLI: --compression-restart performs disable+enable internally and
+      // prints "Compression proxy restarted". Older CLIs lack it, so fall back to
+      // --compression-enable (which (re)starts the proxy and prints
+      // "Compression enabled — proxy on port N").
+      let output: string;
+      try {
+        output = await this.executeCommand(`${baseCommand} --compression-restart`);
+        this.outputChannel.appendLine(`[ElysiaService] --compression-restart output: ${output.substring(0, 500)}`);
+      } catch (e) {
+        this.outputChannel.appendLine('[ElysiaService] --compression-restart unavailable, falling back to --compression-enable');
+        output = await this.executeCommand(`${baseCommand} --compression-enable`);
+        this.outputChannel.appendLine(`[ElysiaService] --compression-enable output: ${output.substring(0, 500)}`);
+      }
 
-      if (!disableOutput.includes('Compression disabled')) {
+      const ok =
+        output.includes('Compression proxy restarted') ||
+        (output.includes('Compression enabled') && output.includes('port')) ||
+        output.includes('Compression is not enabled');
+
+      if (!ok) {
         return {
           success: false,
-          message: 'Failed to disable compression',
-          details: disableOutput
+          message: 'Compression restart did not confirm success',
+          details: output
         };
       }
 
-      // Step 2: Enable compression
-      this.outputChannel.appendLine('[ElysiaService] Step 2: Enabling compression...');
-      const enableOutput = await this.executeCommand(`${baseCommand} --compression-enable`);
-      this.outputChannel.appendLine(`[ElysiaService] Enable output: ${enableOutput.substring(0, 500)}`);
-
-      if (!enableOutput.includes('Compression enabled') || !enableOutput.includes('port 8787')) {
-        return {
-          success: false,
-          message: 'Failed to enable compression',
-          details: enableOutput
-        };
-      }
-
-      // Success!
       return {
         success: true,
         message: 'Compression restarted successfully',
-        details: enableOutput
+        details: output
       };
 
     } catch (error) {

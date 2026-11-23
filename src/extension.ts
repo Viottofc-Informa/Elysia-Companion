@@ -70,6 +70,20 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }),
 
+    vscode.commands.registerCommand('elysiaUsage.managePlugins', async () => {
+      if (!elysiaService) {
+        vscode.window.showErrorMessage('Elysia service not initialized');
+        return;
+      }
+
+      const config = await elysiaService.fetchConfig();
+      if (config) {
+        DetailsPanel.show(config, context.extensionUri, elysiaService, 'plugins');
+      } else {
+        vscode.window.showErrorMessage('Failed to fetch Elysia usage details');
+      }
+    }),
+
     vscode.commands.registerCommand('elysiaUsage.openSettings', () => {
       vscode.commands.executeCommand(
         'workbench.action.openSettings',

@@ -1,8 +1,8 @@
 # Elysia Companion — Project Map
 
 > **Project Type:** VS Code Extension  
-> **Status:** ✅ Production Ready (v0.2.1)  
-> **Last Updated:** 2026-10-22  
+> **Status:** ✅ Production Ready (v0.3.1)  
+> **Last Updated:** 2026-11-23  
 > **BLAST Phase:** 5 (Trigger - Deployed)  
 > **Repository:** https://github.com/Viottofc-Informa/Elysia-Companion
 
@@ -179,6 +179,7 @@ interface Commands {
   'elysiaUsage.togglePrivateMode': () => Promise<void>;
   'elysiaUsage.getModels': () => Promise<ModelsResponse>;
   'elysiaUsage.changeModel': (modelName: string) => Promise<void>;
+  'elysiaUsage.managePlugins': () => Promise<void>;                 // opens Plugins tab
 }
 ```
 
@@ -302,6 +303,7 @@ webview.onDidReceiveMessage(async (msg) => {
 | Top Projects/Models | ✅ | v0.2.0 — Collapsible tables with top 5 each |
 | Recent Requests | ✅ | v0.2.0 — Last 5 requests with detailed metrics |
 | Compression Icon → Compression Tab | ✅ | v0.2.0 — Click opens dashboard directly on Compression tab |
+| Plugin Manager | ✅ | v0.3.1 — Plugins tab: toggle Caveman/Ponytail (mode+level); Tracing/Shunt read-only |
 | Settings | ✅ | Configurable thresholds |
 | Auto-refresh | ✅ | Every 5 minutes |
 | Build/Package Scripts | ✅ | v0.2.0 — PS1, CMD, and Bash variants |

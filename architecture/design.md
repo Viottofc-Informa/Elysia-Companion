@@ -215,6 +215,51 @@ When adding a command:
 
 ---
 
+## ADR-008: Plugin state lives in `~/.claude/settings.json`, edited directly
+
+### Status
+✅ Accepted
+
+### Context
+elysia-code installs four plugins (`tracing`, `shunt`, `caveman`, `ponytail`) whose
+on/off state is driven by the `env` block of `~/.claude/settings.json`, not by the
+Elysia CLI. Users had to hand-edit that JSON and restart Claude Code to toggle
+Caveman (`CAVEMAN_DEFAULT_MODE`) or Ponytail (`PONYTAIL_DEFAULT_MODE`).
+
+### Decision
+A new **Plugins** tab in the dashboard edits the `env` block directly via a new
+`SettingsService` (`src/settingsService.ts`), resolving the path with `os.homedir()`.
+
+- **Controllable:** Caveman (`caveman`/`manual`/`off`), Ponytail (`lite`/`full`/`ultra`/`off`).
+- **Read-only:** Tracing and Shunt. Shunt has no off switch (the CLI re-installs it
+  and re-populates `SHUNT_*` vars on update). Tracing is governance telemetry; the
+  user opted to display both as managed badges rather than expose a toggle.
+- **Writes are atomic** (temp file + rename); a corrupt/unparseable settings.json is
+  never overwritten.
+- Only the two `*_DEFAULT_MODE` keys are written; all other keys (tokens, certs,
+  LangSmith) are preserved.
+
+### Consequences
+- **Pros:**
+  - No CLI dependency for plugin state — works even when the CLI is mid-update
+  - Atomic write avoids corrupting a file that holds credentials
+- **Cons:**
+  - The extension and `elysia-code --update` both write the same file; the CLI may
+    overwrite the env block on update (documented; UI shows a restart banner)
+  - Changes require a Claude Code restart, which the extension (a VS Code process)
+    cannot perform — it surfaces a "Restart Claude Code" banner instead
+
+### Restart semantics
+Plugin changes only apply after the local Elysia / Claude Code session restarts.
+In the Informa environment that restart is performed by restarting the compression
+proxy (`elysia-code --compression-restart`, which runs disable+enable internally;
+the legacy `--compression-disable` flag is being removed) and re-entering Claude Code. The Plugins tab therefore reuses the existing
+`elysiaUsage.restartCompression` command (the same one behind the Usage tab's
+Restart button) via a **Restart** button on the post-save banner. The extension
+does not — and need not — kill the Claude Code process directly.
+
+---
+
 ## Rejected Alternatives
 
 ### ❌ TreeView for Model Selector
@@ -271,5 +316,5 @@ Consider publishing to VS Code Marketplace vs. manual `.vsix` distribution.
 
 ---
 
-**Last Updated:** 2026-07-29  
+**Last Updated:** 2026-11-23  
 **Maintained by:** Informa AI Team

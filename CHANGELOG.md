@@ -2,6 +2,22 @@
 
 All notable changes to the "Elysia Companion" extension will be documented in this file.
 
+## [0.3.1] - 2026-11-23
+
+### Added
+- **Plugins Tab**: New dashboard tab to manage elysia-code plugins
+  - Toggle + level selector for **Caveman** (`caveman`/`manual`/`off`) and **Ponytail** (`lite`/`full`/`ultra`/`off`)
+  - **Tracing** and **Shunt** shown as read-only "Managed" badges
+  - Post-save banner with a **Restart** button that restarts the Elysia session
+- **`SettingsService`** (`src/settingsService.ts`): atomic read/write of `~/.claude/settings.json`; writes only the two `*_DEFAULT_MODE` keys and preserves all others
+- New command `elysiaUsage.managePlugins` (opens dashboard on Plugins tab)
+
+### Changed
+- **`restartCompression()`** now uses `elysia-code --compression-restart` (atomic disable+enable) with fallback to `--compression-enable`; the legacy `--compression-disable` sequence was removed
+
+### Technical
+- ADR-008: plugin state lives in `~/.claude/settings.json`, edited directly (see `architecture/design.md`)
+
 ## [0.2.1] - 2026-10-20
 
 ### Added

@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-11-23 — Plugin Manager tab (v0.3.1)
+
+### Summary
+New **Plugins** tab in the dashboard to toggle Caveman/Ponytail (mode + level)
+without hand-editing `~/.claude/settings.json`. Tracing and Shunt shown as
+read-only "Managed" badges.
+
+### Changed
+- `src/settingsService.ts` (new) — atomic read/write of `settings.json` env block;
+  only `CAVEMAN_DEFAULT_MODE`/`PONYTAIL_DEFAULT_MODE` written; other keys preserved
+- `src/detailsPanel.ts` — Plugins tab (toggle + level select + restart banner)
+- `src/elysiaService.ts` — `restartCompression()` now uses `--compression-restart`
+  (single atomic command) with fallback to `--compression-enable`; legacy
+  `--compression-disable` sequence removed
+- `src/extension.ts` + `package.json` — `elysiaUsage.managePlugins` command (ADR-007)
+- `architecture/design.md` — ADR-008 (plugin state in settings.json, edited directly)
+
+### Rationale
+Restarting the Elysia/Claude Code session is done via the compression proxy
+restart; `--compression-restart` is the current atomic command (the legacy
+`--compression-disable` flag is being removed).
+
+### Verified
+`tsc -p ./` clean; round-trip keeps 30 env keys byte-identical; corrupt/missing
+settings.json never overwritten; `--compression-restart` validated live (proxy
+back on port 8787); UI smoke-tested by user.
+
+---
+
 ## 2026-10-22 — Repository cleanup: reset from v0.3.0 attempt to stable v0.2.1
 
 ### Problem

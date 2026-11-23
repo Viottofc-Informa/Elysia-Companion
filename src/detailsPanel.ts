@@ -2,14 +2,18 @@ import * as vscode from 'vscode';
 import { ElysiaConfig, CompressionStats, RecentRequest } from './elysiaService';
 
 import { ElysiaService } from './elysiaService';
+import { SettingsService, PluginState } from './settingsService';
+
+type TabName = 'usage' | 'compression' | 'plugins';
 
 export class DetailsPanel {
   private static currentPanel: DetailsPanel | undefined;
   private readonly panel: vscode.WebviewPanel;
   private disposables: vscode.Disposable[] = [];
   private elysiaService: ElysiaService | undefined;
+  private settingsService: SettingsService = new SettingsService();
 
-  private constructor(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: 'usage' | 'compression') {
+  private constructor(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: TabName) {
     this.elysiaService = elysiaService;
     this.panel = vscode.window.createWebviewPanel(
       'elysiaUsageDetails',
@@ -144,6 +148,30 @@ export class DetailsPanel {
               vscode.window.showErrorMessage(`Failed to change model: ${errorMsg}`);
             }
             break;
+          case 'loadPlugins':
+            this.postPluginStates();
+            break;
+          case 'setPluginMode':
+            try {
+              this.settingsService.setPluginMode(message.plugin, message.mode);
+              this.panel.webview.postMessage({
+                type: 'pluginModeSet',
+                success: true,
+                restartRequired: true,
+                error: null
+              });
+              this.postPluginStates(); // re-sync UI with on-disk state
+            } catch (err) {
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              console.log(`[DetailsPanel] Error setting plugin mode: ${errorMsg}`);
+              this.panel.webview.postMessage({
+                type: 'pluginModeSet',
+                success: false,
+                restartRequired: false,
+                error: errorMsg
+              });
+            }
+            break;
         }
       },
       undefined,
@@ -153,7 +181,7 @@ export class DetailsPanel {
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
   }
 
-  public static show(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: 'usage' | 'compression'): void {
+  public static show(config: ElysiaConfig, extensionUri: vscode.Uri, elysiaService?: ElysiaService, initialTab?: TabName): void {
     if (DetailsPanel.currentPanel) {
       DetailsPanel.currentPanel.update(config);
       DetailsPanel.currentPanel.panel.reveal();
@@ -171,6 +199,12 @@ export class DetailsPanel {
 
   public update(config: ElysiaConfig): void {
     this.panel.webview.html = this.getWebviewContent(config);
+  }
+
+  // Push current plugin states to the webview (null => settings.json unavailable)
+  private postPluginStates(): void {
+    const plugins = this.settingsService.getPluginStates();
+    this.panel.webview.postMessage({ type: 'pluginsLoaded', plugins });
   }
 
   // Update compression stats in the webview
@@ -1045,6 +1079,151 @@ export class DetailsPanel {
             color: var(--vscode-desc-fg);
         }
 
+        /* Plugins Tab */
+        .plugin-card {
+            background: var(--vscode-panel-bg);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .plugin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .plugin-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--vscode-fg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plugin-version {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--vscode-desc-fg);
+        }
+
+        .plugin-desc {
+            font-size: 12px;
+            color: var(--vscode-desc-fg);
+            margin-bottom: 12px;
+        }
+
+        .plugin-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .plugin-mode-label {
+            font-size: 11px;
+            color: var(--vscode-desc-fg);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plugin-select {
+            background: var(--vscode-dropdown-bg);
+            color: var(--vscode-fg);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: var(--font-body);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .plugin-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            flex: none;
+        }
+
+        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            background: var(--vscode-input-bg);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 22px;
+            transition: background 0.2s ease;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            top: 2px;
+            background: var(--vscode-desc-fg);
+            border-radius: 50%;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: var(--color-success-bg);
+            border-color: var(--color-success);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(18px);
+            background: var(--color-success);
+        }
+
+        .readonly-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 10px;
+            background: var(--vscode-list-hover);
+            color: var(--vscode-desc-fg);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .restart-banner {
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            background: var(--color-warning-bg);
+            color: var(--color-warning-text);
+            border: 1px solid var(--color-warning);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .restart-banner.visible {
+            display: flex;
+        }
+
+        .restart-banner .btn-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+
         .loading-spinner {
             width: 20px;
             height: 20px;
@@ -1080,6 +1259,7 @@ export class DetailsPanel {
         <div class="tabs-container">
             <button class="tab active" onclick="switchTab('usage')" data-tab="usage">Usage</button>
             <button class="tab" onclick="switchTab('compression')" data-tab="compression">Compression</button>
+            <button class="tab" onclick="switchTab('plugins')" data-tab="plugins">Plugins</button>
         </div>
 
         <!-- Usage Tab -->
@@ -1392,6 +1572,19 @@ export class DetailsPanel {
             </div>
         </div>
 
+        <!-- Plugins Tab -->
+        <div id="tab-plugins" class="tab-content">
+            <div class="restart-banner" id="restartBanner">
+                <span>⚠️ Saved. Restart the Elysia session (compression + Claude Code) for changes to take effect.</span>
+                <button class="btn btn-success btn-toggle" onclick="restartEnvironment()">🚀 Restart</button>
+            </div>
+            <div id="plugins-loading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <span>Loading plugins...</span>
+            </div>
+            <div id="plugins-content"></div>
+        </div>
+
         <!-- Confirmation Dialog -->
         <div class="model-confirm-overlay" id="confirmOverlay">
             <div class="model-confirm-dialog">
@@ -1439,6 +1632,11 @@ export class DetailsPanel {
                 // Load compression stats if switching to compression tab
                 if (tabName === 'compression') {
                     loadCompressionStats();
+                }
+
+                // Load plugins if switching to plugins tab
+                if (tabName === 'plugins') {
+                    loadPlugins();
                 }
 
                 // Load model list when switching to usage tab
@@ -1596,6 +1794,93 @@ export class DetailsPanel {
                 const date = new Date(timestamp);
                 return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
+
+            // ========== Plugins Functions ==========
+            const PLUGIN_META = {
+                caveman:  { icon: '🪓', desc: 'Makes replies terse to reduce output tokens.' },
+                ponytail: { icon: '🐴', desc: 'Pushes the model toward the smallest complete change.' },
+                tracing:  { icon: '📡', desc: 'Sends request/tool traces to the internal LangSmith.' },
+                shunt:    { icon: '🔀', desc: 'Routes bulk reads/writes to cheaper routed models.' }
+            };
+
+            window.loadPlugins = function() {
+                vscode.postMessage({ command: 'loadPlugins' });
+            };
+
+            window.displayPlugins = function(plugins) {
+                document.getElementById('plugins-loading').style.display = 'none';
+                const container = document.getElementById('plugins-content');
+
+                if (!plugins) {
+                    container.innerHTML = '<div class="card"><p style="color: var(--vscode-desc-fg); text-align: center;">No elysia settings detected (~/.claude/settings.json not found).</p></div>';
+                    return;
+                }
+
+                container.innerHTML = plugins.map(function(p) {
+                    const meta = PLUGIN_META[p.id] || { icon: '🧩', desc: '' };
+                    const version = p.version ? '<span class="plugin-version">v' + p.version + '</span>' : '';
+
+                    if (!p.controllable) {
+                        return '<div class="plugin-card">' +
+                            '<div class="plugin-header"><span class="plugin-name">' + meta.icon + ' ' + p.name + ' ' + version + '</span>' +
+                            '<span class="readonly-badge">Managed</span></div>' +
+                            '<div class="plugin-desc">' + meta.desc + '</div>' +
+                            '<div class="plugin-controls"><span class="plugin-mode-label">Status</span>' +
+                            '<span class="metric-value" style="color:' + (p.mode === 'on' ? 'var(--color-success)' : 'var(--vscode-desc-fg)') + '">' +
+                            (p.mode === 'on' ? '● On' : '○ Off') + '</span></div></div>';
+                    }
+
+                    const isOn = p.mode !== 'off';
+                    const options = p.modes.map(function(m) {
+                        return '<option value="' + m + '"' + (m === p.mode ? ' selected' : '') + '>' + m + '</option>';
+                    }).join('');
+
+                    return '<div class="plugin-card">' +
+                        '<div class="plugin-header"><span class="plugin-name">' + meta.icon + ' ' + p.name + ' ' + version + '</span>' +
+                        '<label class="toggle"><input type="checkbox" id="toggle-' + p.id + '"' + (isOn ? ' checked' : '') +
+                        ' onchange="onPluginToggle(\\'' + p.id + '\\', this.checked)"><span class="toggle-slider"></span></label></div>' +
+                        '<div class="plugin-desc">' + meta.desc + '</div>' +
+                        '<div class="plugin-controls"><span class="plugin-mode-label">Level</span>' +
+                        '<select class="plugin-select" id="select-' + p.id + '"' + (isOn ? '' : ' disabled') +
+                        ' onchange="onPluginMode(\\'' + p.id + '\\', this.value)">' + options + '</select></div></div>';
+                }).join('');
+            };
+
+            window.onPluginToggle = function(id, checked) {
+                const select = document.getElementById('select-' + id);
+                if (checked) {
+                    // Re-enable: apply the currently-shown non-off level (or default)
+                    select.disabled = false;
+                    let mode = select.value;
+                    if (mode === 'off') {
+                        mode = id === 'caveman' ? 'caveman' : 'lite';
+                        select.value = mode;
+                    }
+                    vscode.postMessage({ command: 'setPluginMode', plugin: id, mode: mode });
+                } else {
+                    select.disabled = true;
+                    vscode.postMessage({ command: 'setPluginMode', plugin: id, mode: 'off' });
+                }
+            };
+
+            window.onPluginMode = function(id, mode) {
+                if (mode === 'off') {
+                    document.getElementById('toggle-' + id).checked = false;
+                    document.getElementById('select-' + id).disabled = true;
+                }
+                vscode.postMessage({ command: 'setPluginMode', plugin: id, mode: mode });
+            };
+
+            window.showRestartBanner = function() {
+                document.getElementById('restartBanner').classList.add('visible');
+            };
+
+            // Reuse the same restart the Usage tab uses: restarts the Elysia
+            // session (compression disable/enable) which is how the local Claude
+            // Code session picks up plugin changes.
+            window.restartEnvironment = function() {
+                vscode.postMessage({ command: 'restartCompression' });
+            };
 
             // ========== Existing Functions ==========
             window.refreshData = function() {
@@ -1759,6 +2044,16 @@ export class DetailsPanel {
                         // Display detailed compression stats
                         if (message.stats) {
                             window.displayCompressionStats(message.stats);
+                        }
+                        break;
+                    case 'pluginsLoaded':
+                        window.displayPlugins(message.plugins);
+                        break;
+                    case 'pluginModeSet':
+                        if (message.success && message.restartRequired) {
+                            window.showRestartBanner();
+                        } else if (!message.success) {
+                            alert('Failed to update plugin: ' + message.error);
                         }
                         break;
                 }
